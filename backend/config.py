@@ -5,19 +5,11 @@ from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file
 
 class Config:
-    # MySQL Configuration
-    MYSQL_HOST = os.environ.get('MYSQL_HOST', 'localhost')
-    MYSQL_PORT = os.environ.get('MYSQL_PORT', '3306')
-    MYSQL_USER = os.environ.get('MYSQL_USER', 'root')
-    MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD', '')
-    MYSQL_DATABASE = os.environ.get('MYSQL_DATABASE', 'movie_recommendation')
-    
-    # SQLAlchemy Configuration for MySQL
-    SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_recycle': 280,
-        'pool_pre_ping': True,
+    # MongoDB Configuration
+    MONGODB_SETTINGS = {
+        'db': os.environ.get('MONGODB_DB', 'movie_recomendation_system'),
+        'host': os.environ.get('MONGODB_HOST', '127.0.0.1'),
+        'port': int(os.environ.get('MONGODB_PORT', 27017))
     }
     
     # JWT Configuration
@@ -33,7 +25,7 @@ class Config:
     BCRYPT_LOG_ROUNDS = 13
     
     # CORS
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:5173').split(',')
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:5173,http://localhost:5174,http://localhost:5175').split(',')
     
     # Rate Limiting
     RATELIMIT_DEFAULT = "200 per hour"

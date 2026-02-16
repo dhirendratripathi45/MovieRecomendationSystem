@@ -3,8 +3,10 @@ from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
 from config import Config
-from models import db
 from auth.routes import auth_bp
+from recommendation.routes import recommendation_bp
+from watchlist.routes import watchlist_bp
+from mongoengine import connect
 import os
 
 def create_app():
@@ -12,17 +14,25 @@ def create_app():
     app.config.from_object(Config)
     
     # Initialize extensions
-    CORS(app, supports_credentials=True)
+    CORS(app, resources={r"/api/*": {"origins": app.config['CORS_ORIGINS']}}, supports_credentials=True)
     bcrypt = Bcrypt(app)
     jwt = JWTManager(app)
-    db.init_app(app)
     
-    # Create tables
-    with app.app_context():
-        db.create_all()
+    # Connect to MongoDB
+    connect(
+        db=app.config['MONGODB_SETTINGS']['db'],
+        host=app.config['MONGODB_SETTINGS']['host'],
+        port=app.config['MONGODB_SETTINGS']['port']
+    )
     
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(recommendation_bp, url_prefix='/api/recommend')
+    app.register_blueprint(watchlist_bp, url_prefix='/api/watchlist')
+    
+    from admin.routes import admin_bp
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+
     
     @app.route('/')
     def index():

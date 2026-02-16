@@ -1,8 +1,8 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 .logo {
@@ -11,9 +11,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -22,6 +24,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -55,18 +58,35 @@
 .loading-screen .spinner {
   width: 50px;
   height: 50px;
-  border: 3px solid rgba(229, 9, 20, 0.3);
+  border: 3px solid rgba(255, 45, 127, 0.3);
   border-radius: 50%;
-  border-top-color: var(--primary-color);
+  border-top-color: #ff2d7f;
   animation: spin 1s ease-in-out infinite;
   margin-bottom: 1rem;
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-screen p {
   color: var(--text-color);
   font-size: 1.2rem;
+}
+
+/* Global Movie Grid - Fixes oversize issue */
+.movies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .movies-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
 }

@@ -1,0 +1,228 @@
+.admin-overview {
+    animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.page-header {
+    margin-bottom: 4rem;
+}
+
+.page-header h1 {
+    font-size: 2.8rem;
+    margin-bottom: 0.8rem;
+    color: var(--text-primary) !important;
+    font-weight: 800;
+    letter-spacing: -1.5px;
+}
+
+.page-header p {
+    color: var(--text-secondary) !important;
+    font-size: 1.25rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2.5rem;
+    margin-bottom: 5rem;
+}
+
+.stat-card {
+    background: #ffffff;
+    padding: 2.5rem;
+    border-radius: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+.stat-card:hover {
+    transform: translateY(-10px);
+    border-color: rgba(255, 45, 127, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+}
+
+.stat-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100px;
+    background: radial-gradient(circle, rgba(255, 45, 127, 0.1) 0%, transparent 70%);
+    opacity: 0;
+    transition: 0.4s;
+}
+
+.stat-card:hover::after {
+    opacity: 1;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-info h3 {
+    font-size: 0.9rem;
+    color: var(--text-muted) !important;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+}
+
+.stat-info p {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-primary) !important;
+    line-height: 1;
+}
+
+.activity-section {
+    background: #ffffff;
+    padding: 3rem;
+    border-radius: 30px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+.activity-section h2 {
+    font-size: 1.8rem;
+    margin-bottom: 2.5rem;
+    font-weight: 800;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.activity-item {
+    display: flex;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    align-items: center;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.activity-icon {
+    font-size: 1.8rem;
+    background: rgba(0, 0, 0, 0.03);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.activity-text {
+    font-weight: 600;
+    color: #e0e0e0 !important;
+    margin-bottom: 0.4rem;
+    font-size: 1.1rem;
+}
+
+.activity-time {
+    color: #666 !important;
+    font-size: 0.9rem;
+}
+
+.admin-lists-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 5rem;
+}
+
+.admin-list-card {
+    background: #ffffff;
+    padding: 2rem;
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+}
+
+.admin-list-card h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    color: #fff !important;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 1rem;
+}
+
+.admin-list-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.admin-list-card li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    color: #ccc;
+    font-size: 0.95rem;
+}
+
+.admin-list-card li:last-child {
+    border-bottom: none;
+}
+
+.list-rank {
+    font-weight: bold;
+    color: #e50914;
+    width: 30px;
+}
+
+.list-title {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 500;
+}
+
+.list-metric {
+    font-size: 0.85rem;
+    color: #888;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 8px;
+    border-radius: 12px;
+}

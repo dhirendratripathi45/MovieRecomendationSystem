@@ -1,38 +1,69 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap');
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* Colors */
+  --bg-dark: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.8);
+  --primary-color: #ff2d7f;
+  --primary-hover: #ff5b9d;
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-muted: #888888;
+  --border-glass: rgba(0, 0, 0, 0.1);
+  --pink-glow: 0 10px 30px rgba(255, 45, 127, 0.15);
+
+  /* Layout */
+  --header-height: 80px;
+  --container-max: 1400px;
+
+  /* Transitions */
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  color-scheme: light;
+  color: var(--text-primary);
+  background-color: var(--bg-dark);
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  overflow-x: hidden;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+#root {
+  width: 100%;
+}
+
+a {
+  font-weight: 500;
+  color: inherit;
+  text-decoration: inherit;
+  transition: var(--transition-smooth);
+}
+
+a:hover {
+  color: var(--primary-color);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.5px;
 }
 
 button {
@@ -40,29 +71,34 @@ button {
   border: 1px solid transparent;
   padding: 0.6em 1.2em;
   font-size: 1em;
-  font-weight: 500;
+  font-weight: 600;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  transition: var(--transition-smooth);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+/* Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+/* Glass effect utility */
+.glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-glass);
 }

@@ -1,0 +1,145 @@
+.manage-users {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.user-avatar-small {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #ff2d7f 0%, #ff5b9d 100%);
+    color: white !important;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(255, 45, 127, 0.3);
+}
+
+/* Inherits table styles from base admin system but adds specific tweaks */
+.admin-table td strong {
+    color: #1a1a1a !important;
+    font-size: 1.1rem;
+}
+
+.btn-small {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 8px !important;
+}
+
+/* Modal Styles */
+.user-details-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+.user-details-modal {
+    background: #ffffff;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    animation: slideUp 0.4s ease-out;
+}
+
+.modal-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 2rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modal-content {
+    padding: 2rem;
+}
+
+.user-info-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.user-avatar-large {
+    width: 80px;
+    height: 80px;
+    background: var(--primary-color);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 800;
+    box-shadow: 0 10px 30px rgba(255, 45, 127, 0.3);
+}
+
+.user-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.user-stat {
+    background: rgba(0, 0, 0, 0.03);
+    padding: 1rem;
+    border-radius: 16px;
+    text-align: center;
+}
+
+.user-stat label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.user-stat span {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+}
+
+.watchlist-item-mini {
+    background: rgba(0, 0, 0, 0.03);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

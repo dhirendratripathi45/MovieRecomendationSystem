@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './Navbar.css';
 
 const Navbar = ({ onSearch, user, onLogout }) => {
@@ -7,30 +7,66 @@ const Navbar = ({ onSearch, user, onLogout }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (onSearch && searchQuery.trim()) {
-      onSearch(searchQuery.trim());
-      setSearchQuery('');
-    }
-  };
 
   const handleLogout = () => {
     if (onLogout) {
       onLogout();
       setShowUserDropdown(false);
-      navigate('/login');
+      navigate('/register');
     }
   };
 
-  const menuItems = [
-    { name: 'Home', path: '/' },
-    { name: 'Recommendations', path: '/recommendations' },
-    { name: 'Trending', path: '/trending' },
-    { name: 'Genres', path: '/genres' },
-    { name: 'My Watchlist', path: '/watchlist' },
-  ];
+  let menuItems = [];
+
+  if (user && user.role === 'admin') {
+    menuItems = [
+      { name: 'Dashboard', path: '/admin' },
+      { name: 'Manage Movies', path: '/admin/movies' },
+      { name: 'Add Movie', path: '/admin/add-movie' },
+      { name: 'Manage Users', path: '/admin/users' },
+      { name: 'Settings', path: '/settings' },
+    ];
+  } else {
+    menuItems = [
+      { name: 'Home', path: '/' },
+      { name: 'Recommendations', path: '/recommendations' },
+      { name: 'Trending', path: '/trending' },
+      { name: 'Genres', path: '/genres' },
+      { name: 'My Watchlist', path: '/watchlist' },
+      { name: 'My Ratings', path: '/rated' },
+    ];
+  }
+
+  const getSearchPlaceholder = () => {
+    if (user?.role === 'admin') {
+      const path = location.pathname;
+      if (path.includes('/admin/users')) return "Search users by name or email...";
+      if (path.includes('/admin/movies')) return "Search movies to manage...";
+      return "Search users, movies...";
+    }
+    return "Search movies, actors, genres...";
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    if (user?.role === 'admin') {
+      const path = location.pathname;
+      if (path.includes('/admin/users')) {
+        navigate(`/admin/users?search=${encodeURIComponent(searchQuery.trim())}`);
+      } else {
+        // Default to movie search in admin context
+        navigate(`/admin/movies?search=${encodeURIComponent(searchQuery.trim())}`);
+      }
+    } else {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+    setSearchQuery('');
+  };
+
 
   return (
     <nav className="navbar">
@@ -48,7 +84,7 @@ const Navbar = ({ onSearch, user, onLogout }) => {
           <form onSubmit={handleSearch} className="search-form">
             <input
               type="text"
-              placeholder="Search movies, actors, genres..."
+              placeholder={getSearchPlaceholder()}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="search-input"
@@ -75,27 +111,27 @@ const Navbar = ({ onSearch, user, onLogout }) => {
         {/* User Section */}
         <div className="navbar-user">
           {user ? (
-            <div 
+            <div
               className="user-profile-container"
               onMouseEnter={() => setShowUserDropdown(true)}
               onMouseLeave={() => setShowUserDropdown(false)}
             >
               <div className="user-profile">
-                <img 
-                  src={user.profile_picture || `https://ui-avatars.com/api/?name=${user.username}&background=random`} 
+                <img
+                  src={user.profile_picture || `https://ui-avatars.com/api/?name=${user.username}&background=random`}
                   alt={user.username}
                   className="user-avatar"
                 />
                 <span className="user-name">{user.username || user.first_name}</span>
                 <span className="dropdown-arrow">▼</span>
               </div>
-              
+
               {/* User Dropdown Menu */}
               {showUserDropdown && (
                 <div className="user-dropdown">
                   <div className="dropdown-header">
-                    <img 
-                      src={user.profile_picture || `https://ui-avatars.com/api/?name=${user.username}&background=random`} 
+                    <img
+                      src={user.profile_picture || `https://ui-avatars.com/api/?name=${user.username}&background=random`}
                       alt={user.username}
                       className="dropdown-avatar"
                     />
@@ -104,15 +140,22 @@ const Navbar = ({ onSearch, user, onLogout }) => {
                       <p>{user.email}</p>
                     </div>
                   </div>
-                  <div className="dropdown-divider"></div>
-                  <Link to="/profile" className="dropdown-item">
-                    <span className="dropdown-icon">👤</span>
-                    My Profile
-                  </Link>
-                  <Link to="/watchlist" className="dropdown-item">
-                    <span className="dropdown-icon">📽️</span>
-                    My Watchlist
-                  </Link>
+                  {user.role !== 'admin' && (
+                    <>
+                      <Link to="/profile" className="dropdown-item">
+                        <span className="dropdown-icon">👤</span>
+                        My Profile
+                      </Link>
+                      <Link to="/watchlist" className="dropdown-item">
+                        <span className="dropdown-icon">📽️</span>
+                        My Watchlist
+                      </Link>
+                      <Link to="/rated" className="dropdown-item">
+                        <span className="dropdown-icon">⭐</span>
+                        My Ratings
+                      </Link>
+                    </>
+                  )}
                   <Link to="/settings" className="dropdown-item">
                     <span className="dropdown-icon">⚙️</span>
                     Settings
@@ -140,7 +183,7 @@ const Navbar = ({ onSearch, user, onLogout }) => {
         </div>
 
         {/* Mobile Menu Button */}
-        <button 
+        <button
           className={`mobile-menu-button ${isMenuOpen ? 'active' : ''}`}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
         >
@@ -156,8 +199,8 @@ const Navbar = ({ onSearch, user, onLogout }) => {
           <ul className="mobile-menu-list">
             {menuItems.map((item) => (
               <li key={item.name} className="mobile-menu-item">
-                <Link 
-                  to={item.path} 
+                <Link
+                  to={item.path}
                   className="mobile-menu-link"
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -165,13 +208,13 @@ const Navbar = ({ onSearch, user, onLogout }) => {
                 </Link>
               </li>
             ))}
-            
+
             {/* Mobile Auth Buttons */}
             {!user ? (
               <>
                 <li className="mobile-menu-item">
-                  <Link 
-                    to="/login" 
+                  <Link
+                    to="/login"
                     className="mobile-menu-link auth-link"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -180,8 +223,8 @@ const Navbar = ({ onSearch, user, onLogout }) => {
                   </Link>
                 </li>
                 <li className="mobile-menu-item">
-                  <Link 
-                    to="/register" 
+                  <Link
+                    to="/register"
                     className="mobile-menu-link auth-link signup"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -193,8 +236,8 @@ const Navbar = ({ onSearch, user, onLogout }) => {
             ) : (
               <>
                 <li className="mobile-menu-item">
-                  <Link 
-                    to="/profile" 
+                  <Link
+                    to="/profile"
                     className="mobile-menu-link"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -203,7 +246,7 @@ const Navbar = ({ onSearch, user, onLogout }) => {
                   </Link>
                 </li>
                 <li className="mobile-menu-item">
-                  <button 
+                  <button
                     onClick={handleLogout}
                     className="mobile-menu-link logout-btn"
                   >
@@ -213,7 +256,7 @@ const Navbar = ({ onSearch, user, onLogout }) => {
                 </li>
               </>
             )}
-            
+
             <li className="mobile-menu-search">
               <form onSubmit={handleSearch} className="mobile-search-form">
                 <input

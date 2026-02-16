@@ -1,12 +1,12 @@
 /* Navbar.css */
 :root {
-  --primary-color: #e50914;
-  --secondary-color: #141414;
-  --text-color: #fff;
-  --text-secondary: #b3b3b3;
-  --hover-color: #ff4e4e;
-  --bg-color: rgba(20, 20, 20, 0.95);
-  --border-color: #333;
+  --primary-color: #ff2d7f;
+  --secondary-color: #ffffff;
+  --text-color: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --hover-color: #ff5b9d;
+  --bg-color: rgba(255, 255, 255, 0.9);
+  --border-color: rgba(0, 0, 0, 0.08);
   --transition: all 0.3s ease;
 }
 
@@ -46,7 +46,7 @@
 .logo-text {
   font-size: 1.8rem;
   font-weight: 800;
-  background: linear-gradient(45deg, var(--primary-color), #ff6b6b);
+  background: linear-gradient(45deg, var(--primary-color), #ff5b9d);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -60,16 +60,16 @@
 
 .search-form {
   display: flex;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 25px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   transition: var(--transition);
 }
 
 .search-form:focus-within {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 45, 127, 0.2);
 }
 
 .search-input {
@@ -310,7 +310,7 @@
   .navbar-container {
     padding: 0 1.5rem;
   }
-  
+
   .navbar-search {
     max-width: 400px;
   }
@@ -347,7 +347,9 @@
   .navbar-container {
     gap: 1rem;
   }
-}/* User Profile Dropdown Styles */
+}
+
+/* User Profile Dropdown Styles */
 .user-profile-container {
   position: relative;
 }
@@ -400,6 +402,7 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -518,7 +521,7 @@
 .btn-signup:hover {
   background: var(--hover-color);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(229, 9, 20, 0.3);
+  box-shadow: 0 5px 15px rgba(255, 45, 127, 0.3);
 }
 
 .btn-icon {
@@ -569,15 +572,15 @@
   .auth-buttons {
     display: none;
   }
-  
+
   .user-profile .user-name {
     display: none;
   }
-  
+
   .user-profile {
     padding: 0.5rem;
   }
-  
+
   .user-dropdown {
     position: fixed;
     top: 70px;
@@ -590,12 +593,13 @@
 }
 
 @media (max-width: 480px) {
+
   .btn-login,
   .btn-signup {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
   }
-  
+
   .user-avatar {
     width: 30px;
     height: 30px;

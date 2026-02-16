@@ -1,0 +1,32 @@
+.admin-layout-clean {
+    min-height: 100vh;
+    background: #f8f9fa !important;
+    color: #1a1a1a !important;
+    font-family: 'Inter', sans-serif;
+}
+
+.admin-layout-clean h1,
+.admin-layout-clean h2,
+.admin-layout-clean h3 {
+    color: #1a1a1a !important;
+}
+
+.admin-layout-clean p,
+.admin-layout-clean span,
+.admin-layout-clean label {
+    color: #4a4a4a !important;
+}
+
+.admin-main-full {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: #f8f9fa;
+}
+
+.admin-page-content {
+    padding: 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}

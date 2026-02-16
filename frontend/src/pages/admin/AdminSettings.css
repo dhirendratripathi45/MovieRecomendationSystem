@@ -1,0 +1,83 @@
+.admin-settings {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 3.5rem;
+}
+
+.settings-section {
+    background: #ffffff;
+    padding: 3.5rem;
+    border-radius: 35px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+}
+
+.settings-section h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 3rem;
+    color: #1a1a1a !important;
+}
+
+.settings-group label {
+    color: #ff2d7f !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-size: 0.85rem;
+}
+
+.range-labels span {
+    color: #666 !important;
+    font-weight: 700;
+}
+
+.btn-primary {
+    background: linear-gradient(90deg, #ff2d7f 0%, #ff5b9d 100%);
+    color: white !important;
+    border: none;
+    padding: 1.2rem 2.5rem;
+    border-radius: 16px;
+    cursor: pointer;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(255, 45, 127, 0.3);
+}
+
+.btn-secondary {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1a1a1a !important;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 1rem 2rem;
+    border-radius: 14px;
+    font-weight: 700;
+    transition: 0.3s;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444 !important;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 1rem 2.5rem;
+    border-radius: 14px;
+    font-weight: 700;
+}
+
+.btn-danger:hover {
+    background: #ef4444;
+    color: #fff !important;
+}

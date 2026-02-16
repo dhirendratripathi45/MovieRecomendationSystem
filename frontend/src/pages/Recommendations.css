@@ -1,0 +1,86 @@
+.recommendations-page {
+    padding: 120px 4rem 4rem;
+    background: var(--bg-dark);
+    min-height: 100vh;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 6rem;
+}
+
+.page-header h1 {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    letter-spacing: -1.5px;
+}
+
+.page-header p {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+}
+
+.section-title h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.cold-start-section {
+    max-width: 800px;
+    margin: 4rem auto;
+}
+
+.no-recs-notice {
+    background: var(--bg-card);
+    padding: 4rem;
+    border-radius: 20px;
+    text-align: center;
+    border: 1px dashed var(--primary-color);
+}
+
+.no-recs-notice p {
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    line-height: 1.6;
+}
+
+.recs-footer {
+    text-align: center;
+    margin-top: 8rem;
+    padding: 4rem 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    text-align: center;
+    margin: 10rem 0;
+}
+
+.empty-state p {
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .recommendations-page {
+        padding: 6rem 2rem 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .recommendations-page {
+        padding: 6rem 2rem 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 2.5rem;
+    }
+}

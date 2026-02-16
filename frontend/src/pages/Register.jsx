@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authAPI } from '../utils/api';
 import './Login.css';
 
-const Register = ({ onLogin }) => {
+const Register = ({ onLogin }) => {  // Add onLogin prop
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
@@ -17,29 +17,29 @@ const Register = ({ onLogin }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
+
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required';
     } else if (formData.username.length < 3) {
       newErrors.username = 'Username must be at least 3 characters';
     }
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-    
+
     if (!formData.password) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-    
+
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -61,26 +61,25 @@ const Register = ({ onLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
-    
+
     setLoading(true);
     setRegisterError('');
-    
+
     try {
+      // Register the user
       const response = await authAPI.register({
         username: formData.username,
         email: formData.email,
         password: formData.password
       });
-      
+
       const { user, token } = response.data;
-      
-      if (onLogin) {
-        onLogin(user, token);
-      }
-      
-      navigate('/');
+
+      // Redirect to login page
+      navigate('/login');
+
     } catch (error) {
       setRegisterError(error.response?.data?.message || 'Registration failed');
     } finally {
@@ -176,8 +175,8 @@ const Register = ({ onLogin }) => {
             </div>
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="login-button"
             disabled={loading}
           >
