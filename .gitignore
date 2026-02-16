@@ -1,3 +1,19 @@
+cat <<EOF > .gitignore
+# Python artifacts
+__pycache__/
+*.pyc
+venv/
+.env
+
+# Large Data & Models
+backend/dataset/
+backend/models/
+
+# Frontend artifacts
+frontend/node_modules/
+frontend/dist/
+EOF
+
 # Logs
 logs
 *.log
