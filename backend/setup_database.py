@@ -12,6 +12,7 @@ def init_sample_data():
         # Insert default genres
         default_genres = [
             {"tmdb_id": 28, "name": "Action", "description": "High-energy physical stunts and chases"},
+            {"tmdb_id": 10759, "name": "Action & Adventure", "description": "High-energy adventure stories"},
             {"tmdb_id": 12, "name": "Adventure", "description": "Exciting journeys and explorations"},
             {"tmdb_id": 16, "name": "Animation", "description": "Animated films and cartoons"},
             {"tmdb_id": 35, "name": "Comedy", "description": "Funny and humorous films"},
@@ -29,7 +30,13 @@ def init_sample_data():
             {"tmdb_id": 10770, "name": "TV Movie", "description": "Made-for-television films"},
             {"tmdb_id": 53, "name": "Thriller", "description": "Suspenseful and tense stories"},
             {"tmdb_id": 10752, "name": "War", "description": "Military conflicts and battles"},
-            {"tmdb_id": 37, "name": "Western", "description": "American frontier stories"}
+            {"tmdb_id": 37, "name": "Western", "description": "American frontier stories"},
+            {"tmdb_id": 10765, "name": "Sci-Fi & Fantasy", "description": "Speculative fiction stories"},
+            {"tmdb_id": 98, "name": "Biography", "description": "Life stories of real people"},
+            {"tmdb_id": 2, "name": "Sport", "description": "Athletic competitions and sports stories"},
+            {"tmdb_id": 3, "name": "Mythological", "description": "Gods, legends and ancient myths"},
+            {"tmdb_id": 4, "name": "Sci-Fi", "description": "Science fiction movies"},
+            {"tmdb_id": 5, "name": "Psychological", "description": "Character's mental and emotional state"}
         ]
         
         print("Checking genres...")

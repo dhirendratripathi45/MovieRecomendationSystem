@@ -12,8 +12,25 @@ def get_watchlist():
         user_id = get_jwt_identity()
         user = User.objects.get(id=user_id)
         
-        watchlist_items = Watchlist.objects(user=user).order_by('-created_at')
-        return jsonify([item.to_dict() for item in watchlist_items]), 200
+        watchlist_items = list(Watchlist.objects(user=user).order_by('-created_at').limit(50))
+        movie_ids = [item.movie_id for item in watchlist_items]
+        
+        from models import Movie
+        movies = Movie.objects(movie_id__in=movie_ids)
+        movie_map = {m.movie_id: m for m in movies}
+        
+        results = []
+        for item in watchlist_items:
+            movie = movie_map.get(item.movie_id)
+            if movie:
+                from recommendation.routes import ensure_poster
+                ensure_poster(movie)
+                results.append(movie.to_dict())
+            else:
+                # Fallback to what's in the watchlist record
+                results.append(item.to_dict())
+                
+        return jsonify(results), 200
     except User.DoesNotExist:
         return jsonify({'message': 'User not found'}), 404
     except Exception as e:

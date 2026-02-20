@@ -1,8 +1,84 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './Home.css';
-import { recommendationAPI, watchlistAPI } from '../utils/api';
+import { recommendationAPI } from '../utils/api';
 import MovieCard from '../components/MovieCard';
 import { useNavigate } from 'react-router-dom';
+
+const LazyGenreRow = ({ genre, watchlistIds, onToggleWatchlist }) => {
+  const [movies, setMovies] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const rowRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (rowRef.current) observer.observe(rowRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const fetchMovies = async () => {
+      setLoading(true);
+      try {
+        const res = await recommendationAPI.getAll(1, 12, genre, '');
+        setMovies(res.data.movies || []);
+      } catch (e) {
+        console.error(`Error fetching ${genre}:`, e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMovies();
+  }, [isVisible, genre]);
+
+  if (!isVisible && !loading && movies.length === 0) {
+    return <div ref={rowRef} style={{ height: '400px', margin: '2rem 0' }}></div>;
+  }
+
+  if (movies.length === 0 && !loading) return null;
+
+  return (
+    <div key={genre} className="genre-row" ref={rowRef}>
+      <div className="genre-row-header">
+        <h2 className="genre-row-title">{genre} Movies</h2>
+        <button className="btn-view-more" onClick={() => navigate(`/search?genre=${genre}`)}>
+          View All →
+        </button>
+      </div>
+      <div className="genre-row-scroll">
+        <div className="genre-row-content">
+          {loading ? (
+            Array(6).fill(0).map((_, i) => (
+              <div key={i} className="genre-movie-card skeleton" style={{ height: '350px', background: '#222', borderRadius: '12px' }}></div>
+            ))
+          ) : (
+            movies.map(movie => (
+              <div key={movie.movieId || movie.id} className="genre-movie-card">
+                <MovieCard
+                  movie={movie}
+                  onToggleWatchlist={onToggleWatchlist}
+                  isInWatchlist={watchlistIds.includes(movie.movieId || movie.id)}
+                />
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Home = ({ user, watchlistIds, onToggleWatchlist }) => {
   const navigate = useNavigate();
@@ -10,45 +86,44 @@ const Home = ({ user, watchlistIds, onToggleWatchlist }) => {
   const [trendingMovies, setTrendingMovies] = useState([]);
   const [arrivingSoonMovies, setArrivingSoonMovies] = useState([]);
   const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
-  const [genreMovies, setGenreMovies] = useState({});
-  const [allGenres, setAllGenres] = useState([]);
 
-  const mainGenres = ['Action', 'Drama', 'Comedy', 'Sci-Fi', 'Thriller', 'Romance', 'Horror', 'Animation'];
+  const preferredGenres = user?.preferences?.preferred_genres || [];
+  const mainGenres = preferredGenres.length > 0
+    ? preferredGenres
+    : ['Action', 'Comedy', 'Sci-Fi', 'Horror', 'Drama', 'Thriller', 'Animation'];
 
-  // Initial Load
+  // Initial Load - Only Hero Content
   useEffect(() => {
     const init = async () => {
       try {
         setLoading(true);
-
-        // Fetch Trending & Arriving Soon
-        const [trendingRes, arrivingRes, genresRes] = await Promise.all([
+        // Fetch only Trending and Arriving Soon for the Hero section initially
+        const [trendingRes, arrivingRes] = await Promise.all([
           recommendationAPI.getTrending(),
-          recommendationAPI.getArrivingSoon(),
-          recommendationAPI.getGenres()
+          recommendationAPI.getArrivingSoon()
         ]);
 
-        if (trendingRes.data) setTrendingMovies(trendingRes.data.slice(0, 6));
-        if (arrivingRes.data) setArrivingSoonMovies(arrivingRes.data.slice(0, 6));
-        if (genresRes.data) setAllGenres(genresRes.data);
-
-        // Fetch movies for each main genre
-        const genrePromises = mainGenres.map(async (genre) => {
-          try {
-            const res = await recommendationAPI.getAll(1, 10, genre, '');
-            return { genre, movies: res.data.movies || [] };
-          } catch (e) {
-            console.error(`Error fetching ${genre}:`, e);
-            return { genre, movies: [] };
+        if (trendingRes.data) {
+          let trending = trendingRes.data;
+          if (preferredGenres.length > 0) {
+            trending = trending.filter(m =>
+              m.genres_list?.some(g => preferredGenres.includes(g)) ||
+              m.genres?.some(g => preferredGenres.includes(g.name))
+            );
           }
-        });
+          setTrendingMovies(trending.slice(0, 10));
+        }
 
-        const genreResults = await Promise.all(genrePromises);
-        const genreMap = {};
-        genreResults.forEach(({ genre, movies }) => {
-          genreMap[genre] = movies;
-        });
-        setGenreMovies(genreMap);
+        if (arrivingRes.data) {
+          let arriving = arrivingRes.data;
+          if (preferredGenres.length > 0) {
+            arriving = arriving.filter(m =>
+              m.genres_list?.some(g => preferredGenres.includes(g)) ||
+              m.genres?.some(g => preferredGenres.includes(g.name))
+            );
+          }
+          setArrivingSoonMovies(arriving.slice(0, 10));
+        }
 
       } catch (e) {
         console.error("Init Error", e);
@@ -79,7 +154,7 @@ const Home = ({ user, watchlistIds, onToggleWatchlist }) => {
 
   return (
     <div className="home">
-      {/* Hero Section - 2 Slides at Once */}
+      {/* Hero Section */}
       <section className="hero-dual-slider">
         <div className="hero-slides-container">
           {allHeroMovies.length > 0 ? (
@@ -140,36 +215,61 @@ const Home = ({ user, watchlistIds, onToggleWatchlist }) => {
         </button>
       </section>
 
-      {/* Genre-Based Movie Rows */}
+      {/* Featured Sections */}
       <section className="genre-sections">
-        {mainGenres.map(genre => {
-          const movies = genreMovies[genre] || [];
-          if (movies.length === 0) return null;
-
-          return (
-            <div key={genre} className="genre-row">
-              <div className="genre-row-header">
-                <h2 className="genre-row-title">{genre} Movies</h2>
-                <button className="btn-view-more" onClick={() => navigate(`/browse?genre=${genre}`)}>
-                  View All →
-                </button>
-              </div>
-              <div className="genre-row-scroll">
-                <div className="genre-row-content">
-                  {movies.map(movie => (
-                    <div key={movie.movieId || movie.id} className="genre-movie-card">
-                      <MovieCard
-                        movie={movie}
-                        onToggleWatchlist={onToggleWatchlist}
-                        isInWatchlist={watchlistIds.includes(movie.movieId || movie.id)}
-                      />
-                    </div>
-                  ))}
+        <div className="genre-row">
+          <div className="genre-row-header">
+            <h2 className="genre-row-title">Trending This week</h2>
+            <button className="btn-view-more" onClick={() => navigate('/trending')}>
+              View All →
+            </button>
+          </div>
+          <div className="genre-row-scroll">
+            <div className="genre-row-content">
+              {trendingMovies.map(movie => (
+                <div key={movie.movieId || movie.id} className="genre-movie-card">
+                  <MovieCard
+                    movie={movie}
+                    onToggleWatchlist={onToggleWatchlist}
+                    isInWatchlist={watchlistIds.includes(movie.movieId || movie.id)}
+                  />
                 </div>
-              </div>
+              ))}
             </div>
-          );
-        })}
+          </div>
+        </div>
+
+        <div className="genre-row">
+          <div className="genre-row-header">
+            <h2 className="genre-row-title">Arriving Soon</h2>
+            <button className="btn-view-more" onClick={() => navigate('/viewall')}>
+              View All →
+            </button>
+          </div>
+          <div className="genre-row-scroll">
+            <div className="genre-row-content">
+              {arrivingSoonMovies.map(movie => (
+                <div key={movie.movieId || movie.id} className="genre-movie-card">
+                  <MovieCard
+                    movie={movie}
+                    onToggleWatchlist={onToggleWatchlist}
+                    isInWatchlist={watchlistIds.includes(movie.movieId || movie.id)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Genre-Based Movie Rows - Now Lazy Loaded */}
+        {mainGenres.map(genre => (
+          <LazyGenreRow
+            key={genre}
+            genre={genre}
+            watchlistIds={watchlistIds}
+            onToggleWatchlist={onToggleWatchlist}
+          />
+        ))}
       </section>
 
       {/* Footer */}

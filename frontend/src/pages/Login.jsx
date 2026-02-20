@@ -95,7 +95,7 @@ const Login = ({ onLogin }) => {
       <div className="login-card">
         <div className="login-header">
           <div className="logo">
-            <span className="logo-icon">🎬</span>
+            <span className="logo-icon">🌐</span>
             <span className="logo-text">MovieRec</span>
           </div>
           <h1>Welcome Back</h1>

@@ -1,102 +1,123 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './Recommendations.css';
 import { recommendationAPI } from '../utils/api';
 import MovieCard from '../components/MovieCard';
 
-const Recommendations = ({ user, watchlistIds, onToggleWatchlist }) => {
-    const [recommendations, setRecommendations] = useState([]);
-    const [trendingMovies, setTrendingMovies] = useState([]);
-    const [mostRated, setMostRated] = useState([]);
-    const [mostViewed, setMostViewed] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+const LazyRecSection = ({ title, fetchFn, user, watchlistIds, onToggleWatchlist, limit }) => {
+    const [movies, setMovies] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
+    const sectionRef = useRef(null);
+    const scrollRef = useRef(null);
 
     useEffect(() => {
-        const fetchAllData = async () => {
-            console.log("Fetching all data for user:", user?.id);
-            try {
-                setLoading(true);
-                setError(null);
-
-                if (user && user.id) {
-                    // Fetch Personalized Hybrid Recommendations
-                    try {
-                        const recResponse = await recommendationAPI.getHybrid(user.id);
-                        if (recResponse.data && Array.isArray(recResponse.data)) {
-                            const mappedRecs = recResponse.data.map(m => ({
-                                ...m,
-                                genres: m.genres,
-                            }));
-                            setRecommendations(mappedRecs);
-                        }
-                    } catch (recError) {
-                        console.error("Failed to fetch personalized recs:", recError);
-                    }
-
-                    // Always fetch trending
-                    try {
-                        const trendingResponse = await recommendationAPI.getTrending();
-                        if (trendingResponse.data && Array.isArray(trendingResponse.data)) {
-                            setTrendingMovies(trendingResponse.data.slice(0, 15));
-                        }
-                    } catch (trendError) {
-                        console.error("Failed to fetch trending movies:", trendError);
-                    }
-
-                    // Fetch Most Rated
-                    try {
-                        const ratedRes = await recommendationAPI.getMostRated();
-                        if (ratedRes.data && Array.isArray(ratedRes.data)) {
-                            setMostRated(ratedRes.data);
-                        }
-                    } catch (e) { console.error("Most rated fetch failed", e); }
-
-                    // Fetch Most Viewed (Searched)
-                    try {
-                        const viewedRes = await recommendationAPI.getMostViewed();
-                        if (viewedRes.data && Array.isArray(viewedRes.data)) {
-                            setMostViewed(viewedRes.data);
-                        }
-                    } catch (e) { console.error("Most viewed fetch failed", e); }
-
-                } else {
-                    setError("Please login to see personalized recommendations.");
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                    observer.disconnect();
                 }
+            },
+            { threshold: 0.1 }
+        );
+        if (sectionRef.current) observer.observe(sectionRef.current);
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+        if (!isVisible) return;
+        const load = async () => {
+            setLoading(true);
+            try {
+                const res = await fetchFn();
+                let data = res.data || [];
+
+                // Filter by preferred genres if provided
+                const preferredGenres = user?.preferences?.preferred_genres || [];
+                if (preferredGenres.length > 0) {
+                    data = data.filter(m =>
+                        m.genres_list?.some(g => preferredGenres.includes(g)) ||
+                        m.genres?.some(g => preferredGenres.includes(g.name))
+                    );
+                }
+
+                if (limit) data = data.slice(0, limit);
+                setMovies(data);
             } catch (err) {
-                console.error('General error in Recommendations page:', err);
-                setError("Something went wrong while loading recommendations.");
+                console.error(`Error loading ${title}:`, err);
             } finally {
                 setLoading(false);
             }
         };
+        load();
+    }, [isVisible, fetchFn, title, limit, user]);
 
-        if (user) {
-            fetchAllData();
-        } else {
-            setLoading(false);
+    const scroll = (direction) => {
+        if (scrollRef.current) {
+            const { scrollLeft, clientWidth } = scrollRef.current;
+            const scrollTo = direction === 'left' ? scrollLeft - clientWidth : scrollLeft + clientWidth;
+            scrollRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
         }
-    }, [user]);
+    };
 
-    if (loading) {
-        return (
-            <div className="loading-screen">
-                <div className="loading-spinner"></div>
-                <p>Finding the perfect movies for you...</p>
-            </div>
-        );
+    if (!isVisible && !loading && movies.length === 0) {
+        return <section ref={sectionRef} style={{ height: '400px', margin: '2rem 0' }}></section>;
     }
 
-    if (error) {
+    if (movies.length === 0 && !loading) return null;
+
+    return (
+        <section className="recs-section" ref={sectionRef}>
+            <div className="section-header">
+                <div className="section-title">
+                    <h2>{title}</h2>
+                    <div className="title-underline"></div>
+                </div>
+                <div className="scroll-controls">
+                    <button className="scroll-btn prev" onClick={() => scroll('left')}>‹</button>
+                    <button className="scroll-btn next" onClick={() => scroll('right')}>›</button>
+                </div>
+            </div>
+            <div className="movies-row-container">
+                <div className="movies-row-scroll" ref={scrollRef}>
+                    {loading ? (
+                        Array(limit || 10).fill(0).map((_, i) => (
+                            <div key={i} className="skeleton-card" style={{ flex: '0 0 240px', height: '360px', background: 'rgba(255,255,255,0.05)', borderRadius: '16px' }}></div>
+                        ))
+                    ) : (
+                        movies.map(movie => (
+                            <div key={movie.movieId || movie.id} className="movie-row-item">
+                                <MovieCard
+                                    movie={movie}
+                                    onToggleWatchlist={onToggleWatchlist}
+                                    isInWatchlist={watchlistIds.includes(movie.movieId || movie.id)}
+                                />
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+const Recommendations = ({ user, watchlistIds, onToggleWatchlist }) => {
+    const [isInitialLoad, setIsInitialLoad] = useState(true);
+
+    useEffect(() => {
+        // Just a small delay to handle the page transition smoothly
+        const timer = setTimeout(() => setIsInitialLoad(false), 500);
+        return () => clearTimeout(timer);
+    }, []);
+
+    if (!user) {
         return (
             <div className="error-screen">
-                <div className="error-icon">⚠️</div>
-                <p>{error}</p>
-                <button onClick={() => window.location.reload()} className="retry-btn">Retry</button>
+                <div className="error-icon">👤</div>
+                <p>Please login to see personalized recommendations.</p>
             </div>
         );
     }
-
-    const hasNoContent = recommendations.length === 0 && trendingMovies.length === 0;
 
     return (
         <div className="recommendations-page">
@@ -105,101 +126,41 @@ const Recommendations = ({ user, watchlistIds, onToggleWatchlist }) => {
                 <p>Based on your viewing history and preferences</p>
             </header>
 
-            {recommendations.length > 0 && (
-                <section className="recs-section">
-                    <div className="section-title">
-                        <h2>Picked For You</h2>
-                        <div className="title-underline"></div>
-                    </div>
-                    <div className="movies-grid">
-                        {recommendations.map(movie => (
-                            <MovieCard
-                                key={movie.movieId || movie.id}
-                                movie={movie}
-                                onToggleWatchlist={onToggleWatchlist}
-                                isInWatchlist={watchlistIds.includes(movie.movieId || movie.id)}
-                            />
-                        ))}
-                    </div>
-                </section>
-            )}
+            <LazyRecSection
+                title="Picked For You"
+                fetchFn={() => recommendationAPI.getHybrid(user.id)}
+                user={user}
+                watchlistIds={watchlistIds}
+                onToggleWatchlist={onToggleWatchlist}
+            />
 
-            {recommendations.length === 0 && !loading && !error && (
-                <section className="cold-start-section">
-                    <div className="no-recs-notice">
-                        <p>You haven't rated enough movies yet for personalized recommendations.</p>
-                        <p>Start rating movies to get better picks!</p>
-                    </div>
-                </section>
-            )}
+            <LazyRecSection
+                title="Trending Now"
+                fetchFn={() => recommendationAPI.getTrending()}
+                user={user}
+                watchlistIds={watchlistIds}
+                onToggleWatchlist={onToggleWatchlist}
+                limit={15}
+            />
 
-            {trendingMovies.length > 0 && (
-                <section className="trending-section">
-                    <div className="section-title">
-                        <h2>Trending Now</h2>
-                        <div className="title-underline"></div>
-                    </div>
-                    <div className="movies-grid">
-                        {trendingMovies.map(movie => (
-                            <MovieCard
-                                key={movie.movieId || movie.id}
-                                movie={movie}
-                                onToggleWatchlist={onToggleWatchlist}
-                                isInWatchlist={watchlistIds.includes(movie.movieId || movie.id)}
-                            />
-                        ))}
-                    </div>
-                </section>
-            )}
+            <LazyRecSection
+                title="Most Rated by Users"
+                fetchFn={() => recommendationAPI.getMostRated()}
+                user={user}
+                watchlistIds={watchlistIds}
+                onToggleWatchlist={onToggleWatchlist}
+            />
 
-            {mostRated.length > 0 && (
-                <section className="recs-section">
-                    <div className="section-title">
-                        <h2>Most Rated by Users</h2>
-                        <div className="title-underline"></div>
-                    </div>
-                    <div className="movies-grid">
-                        {mostRated.map(movie => (
-                            <MovieCard
-                                key={movie.movieId || movie.id}
-                                movie={movie}
-                                onToggleWatchlist={onToggleWatchlist}
-                                isInWatchlist={watchlistIds.includes(movie.movieId || movie.id)}
-                            />
-                        ))}
-                    </div>
-                </section>
-            )}
-
-            {mostViewed.length > 0 && (
-                <section className="recs-section">
-                    <div className="section-title">
-                        <h2>Most Searched</h2>
-                        <div className="title-underline"></div>
-                    </div>
-                    <div className="movies-grid">
-                        {mostViewed.map(movie => (
-                            <MovieCard
-                                key={movie.movieId || movie.id}
-                                movie={movie}
-                                onToggleWatchlist={onToggleWatchlist}
-                                isInWatchlist={watchlistIds.includes(movie.movieId || movie.id)}
-                            />
-                        ))}
-                    </div>
-                </section>
-            )}
-
-
-            {hasNoContent && !loading && (
-                <div className="empty-state">
-                    <p>We couldn't find any movies for you right now.</p>
-                    <p>Please check back later or try exploring genres!</p>
-                </div>
-            )}
+            <LazyRecSection
+                title="Most Searched"
+                fetchFn={() => recommendationAPI.getMostViewed()}
+                user={user}
+                watchlistIds={watchlistIds}
+                onToggleWatchlist={onToggleWatchlist}
+            />
 
             <footer className="recs-footer">
-                <p>Showing {recommendations.length + trendingMovies.length + mostRated.length + mostViewed.length} recommendations for {user?.username}</p>
+                <p>Personalized collection for {user?.username}</p>
             </footer>
         </div>
     );

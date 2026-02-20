@@ -14,6 +14,8 @@ import threading
 recommendation_bp = Blueprint('recommendation', __name__)
 loader = ModelLoader()
 
+from extensions import cache
+
 def fetch_and_save_poster(movie_id, tmdb_id):
     """Background task to fetch poster"""
     try:
@@ -67,21 +69,23 @@ def get_all_movies():
         page = int(request.args.get('page', 1))
         limit = int(request.args.get('limit', 20))
         genre = request.args.get('genre')
+        country = request.args.get('country')
         search = request.args.get('search')
         
         query = Movie.objects
         
         if genre and genre != 'All':
             # Find genre object
-            # Note: genres stored as references or list of strings? 
-            # In models.py: genres = ListField(ReferenceField(Genre)) AND genres_list = ListField(StringField())
-            # Let's try text search on genres_list for simplicity, or look up Genre
-            # Since importing Genre model:
-            # g_obj = Genre.objects(name=genre).first()
-            # if g_obj:
-            #     query = query(genres=g_obj)
-            # OR simply use the genres_list string field if populated
             query = query(genres_list__icontains=genre)
+            
+        if country and country != 'All':
+            if country == 'India':
+                from mongoengine.queryset.visitor import Q
+                # Match India in production countries, or Hindi language, or 'Bollywood' in title
+                query = query(Q(production_countries__icontains='India') | Q(original_language='hi') | Q(title__icontains='Bollywood'))
+            else:
+                # For other countries, use direct production_country match
+                query = query(production_countries__icontains=country)
             
         if search:
             query = query(title__icontains=search)
@@ -89,9 +93,9 @@ def get_all_movies():
         total = query.count()
         movies = query.skip((page - 1) * limit).limit(limit)
         
-        # Trigger background poster checks for these movies
-        for m in movies:
-            ensure_poster(m)
+        # Trigger background poster checks for these movies (DISABLED for speed)
+        # for m in movies:
+        #     ensure_poster(m)
             
         return jsonify({
             'movies': [m.to_dict() for m in movies],
@@ -151,7 +155,7 @@ def recommend_collaborative(user_id):
         for mid, score in sorted_recs:
              if mid in movie_map:
                  movie_obj = movie_map[mid]
-                 ensure_poster(movie_obj)
+                 # ensure_poster(movie_obj)
                  d = movie_obj.to_dict()
                  d['match_score'] = min(98, int(score * 10) + 50) 
                  rec_list.append(d)
@@ -323,11 +327,12 @@ def recommend_content(movie_title):
         return jsonify({'error': str(e)}), 500
 
 @recommendation_bp.route('/trending', methods=['GET'])
+@cache.cached(timeout=600)
 def recommend_trending():
     try:
-        admin_trending = list(Movie.objects(is_trending=True).order_by('-updated_at'))
-        
         limit = 20
+        admin_trending = list(Movie.objects(is_trending=True).order_by('-updated_at').limit(limit))
+        
         needed = limit - len(admin_trending)
         
         if needed > 0:
@@ -335,19 +340,20 @@ def recommend_trending():
             more_movies = Movie.objects(id__nin=ids_exclude).order_by('-release_year', '-movie_id').limit(needed)
             admin_trending.extend(list(more_movies))
             
-        for m in admin_trending:
-            ensure_poster(m)
+         # for m in admin_trending:
+        #     ensure_poster(m)
             
         return jsonify([m.to_dict() for m in admin_trending])
     except Exception as e:
          return jsonify({'error': str(e)}), 500
 
 @recommendation_bp.route('/arriving-soon', methods=['GET'])
+@cache.cached(timeout=600)
 def recommend_arriving_soon():
     try:
         movies = Movie.objects(is_arriving_soon=True).order_by('-release_year', '-movie_id').limit(20)
-        for m in movies:
-            ensure_poster(m)
+        # for m in movies:
+        #     ensure_poster(m)
         return jsonify([m.to_dict() for m in movies])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -369,7 +375,7 @@ def recommend_most_rated():
             if not movie:
                  movie = Movie.objects(tmdb_id=item['_id']).first()
             if movie:
-                ensure_poster(movie)
+                # ensure_poster(movie)
                 m_dict = movie.to_dict()
                 m_dict['vote_count_local'] = item['count'] # Add local vote count
                 movies.append(m_dict)
@@ -383,13 +389,14 @@ def recommend_most_viewed():
     try:
         # Fetch top viewed movies (using 'Most Searched' proxy)
         movies = Movie.objects.order_by('-view_count').limit(10)
-        for m in movies:
-            ensure_poster(m)
+        # for m in movies:
+        #     ensure_poster(m)
         return jsonify([m.to_dict() for m in movies])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @recommendation_bp.route('/genres', methods=['GET'])
+@cache.cached(timeout=3600)
 def get_genres():
     try:
         genres = Genre.objects.all()
@@ -405,8 +412,8 @@ def get_movies_by_genre(tmdb_genre_id):
             return jsonify({'error': 'Genre not found'}), 404
         movies = Movie.objects(genres=genre).limit(20)
         
-        for m in movies:
-            ensure_poster(m)
+        # for m in movies:
+        #     ensure_poster(m)
             
         return jsonify([m.to_dict() for m in movies])
     except Exception as e:
@@ -465,12 +472,17 @@ def get_user_rated_movies():
         if not user:
              return jsonify({'error': 'User not found'}), 404
              
-        rated_movies = RatedMovie.objects(user=user).order_by('-created_at')
+        rated_movies = list(RatedMovie.objects(user=user).order_by('-created_at').limit(50))
+        movie_ids = [rm.movie_id for rm in rated_movies]
+        
+        movies = Movie.objects(movie_id__in=movie_ids)
+        movie_map = {m.movie_id: m for m in movies}
         
         results = []
         for rm in rated_movies:
-            movie = Movie.objects(movie_id=rm.movie_id).first()
+            movie = movie_map.get(rm.movie_id)
             if movie:
+                # Still trigger poster check, but it's background thread
                 ensure_poster(movie)
                 m_dict = movie.to_dict()
                 m_dict['user_rating'] = rm.score
@@ -482,6 +494,7 @@ def get_user_rated_movies():
         return jsonify({'error': str(e)}), 500
 
 @recommendation_bp.route('/movie/<id>', methods=['GET'])
+@cache.cached(timeout=300, query_string=True)
 def get_movie_details(id):
     try:
         if len(id) == 24: 

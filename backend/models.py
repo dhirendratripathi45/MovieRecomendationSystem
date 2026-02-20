@@ -221,7 +221,12 @@ class User(Document):
             'profile_picture': self.profile_picture,
             'is_active': self.is_active,
             'is_verified': self.is_verified,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'preferences': {
+                'preferred_genres': self.preferences.preferred_genres if self.preferences else [],
+                'preferred_language': self.preferences.preferred_language if self.preferences else 'en',
+                'preferred_algorithm': self.preferences.preferred_algorithm if self.preferences else 'hybrid'
+            }
         }
 
 class Recommendation(Document):

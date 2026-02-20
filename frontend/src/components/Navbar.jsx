@@ -1,14 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { recommendationAPI } from '../utils/api';
 import './Navbar.css';
 
 const Navbar = ({ onSearch, user, onLogout }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [showGenreMenu, setShowGenreMenu] = useState(false);
+  const [mobileGenreOpen, setMobileGenreOpen] = useState(false);
+  const [genres, setGenres] = useState([]);
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const response = await recommendationAPI.getGenres();
+        let genreData = response.data;
+
+        // Filter genres based on user preferences if they exist
+        const preferredGenres = user?.preferences?.preferred_genres || [];
+        if (preferredGenres.length > 0) {
+          genreData = genreData.filter(g => preferredGenres.includes(g.name));
+        }
+
+        setGenres(genreData);
+      } catch (error) {
+        console.error('Failed to fetch genres:', error);
+      }
+    };
+    fetchGenres();
+  }, [user]);
 
   const handleLogout = () => {
     if (onLogout) {
@@ -16,6 +39,12 @@ const Navbar = ({ onSearch, user, onLogout }) => {
       setShowUserDropdown(false);
       navigate('/register');
     }
+  };
+
+  const handleGenreClick = (genreName) => {
+    navigate(`/search?genre=${encodeURIComponent(genreName)}`);
+    setShowGenreMenu(false);
+    setIsMenuOpen(false);
   };
 
   let menuItems = [];
@@ -32,10 +61,6 @@ const Navbar = ({ onSearch, user, onLogout }) => {
     menuItems = [
       { name: 'Home', path: '/' },
       { name: 'Recommendations', path: '/recommendations' },
-      { name: 'Trending', path: '/trending' },
-      { name: 'Genres', path: '/genres' },
-      { name: 'My Watchlist', path: '/watchlist' },
-      { name: 'My Ratings', path: '/rated' },
     ];
   }
 
@@ -67,6 +92,13 @@ const Navbar = ({ onSearch, user, onLogout }) => {
     setSearchQuery('');
   };
 
+  const chunkArray = (arr, size) => {
+    const chunks = [];
+    for (let i = 0; i < arr.length; i += size) {
+      chunks.push(arr.slice(i, i + size));
+    }
+    return chunks;
+  };
 
   return (
     <nav className="navbar">
@@ -74,9 +106,50 @@ const Navbar = ({ onSearch, user, onLogout }) => {
         {/* Logo */}
         <div className="navbar-logo">
           <Link to="/" className="logo-link">
-            <span className="logo-icon">🎬</span>
             <span className="logo-text">MovieRec</span>
           </Link>
+        </div>
+
+        {/* Desktop Menu */}
+        <div className="navbar-menu">
+          <ul className="menu-list">
+            {menuItems.map((item) => (
+              <li key={item.name} className="menu-item">
+                <Link to={item.path} className="menu-link">
+                  {item.name}
+                </Link>
+              </li>
+            ))}
+            {!user || user.role !== 'admin' ? (
+              <>
+                <li
+                  className="menu-item mega-menu-container"
+                  onMouseEnter={() => setShowGenreMenu(true)}
+                  onMouseLeave={() => setShowGenreMenu(false)}
+                >
+                  <span className="menu-link">Genre ▼</span>
+                  {showGenreMenu && (
+                    <div className="mega-menu">
+                      {chunkArray(genres, Math.ceil(genres.length / 4)).map((column, idx) => (
+                        <div key={idx} className="mega-menu-column">
+                          {column.map((genre) => (
+                            <Link
+                              key={genre.id}
+                              to={`/search?genre=${encodeURIComponent(genre.name)}`}
+                              className="mega-menu-item"
+                              onClick={() => setShowGenreMenu(false)}
+                            >
+                              {genre.name}
+                            </Link>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              </>
+            ) : null}
+          </ul>
         </div>
 
         {/* Search Bar */}
@@ -93,19 +166,6 @@ const Navbar = ({ onSearch, user, onLogout }) => {
               <span className="search-icon">🔍</span>
             </button>
           </form>
-        </div>
-
-        {/* Desktop Menu */}
-        <div className="navbar-menu">
-          <ul className="menu-list">
-            {menuItems.map((item) => (
-              <li key={item.name} className="menu-item">
-                <Link to={item.path} className="menu-link">
-                  {item.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
         </div>
 
         {/* User Section */}
@@ -145,6 +205,14 @@ const Navbar = ({ onSearch, user, onLogout }) => {
                       <Link to="/profile" className="dropdown-item">
                         <span className="dropdown-icon">👤</span>
                         My Profile
+                      </Link>
+                      <Link to="/trending" className="dropdown-item">
+                        <span className="dropdown-icon">📈</span>
+                        Trending
+                      </Link>
+                      <Link to="/genres" className="dropdown-item">
+                        <span className="dropdown-icon">🎭</span>
+                        Genres
                       </Link>
                       <Link to="/watchlist" className="dropdown-item">
                         <span className="dropdown-icon">📽️</span>
@@ -194,87 +262,112 @@ const Navbar = ({ onSearch, user, onLogout }) => {
       </div>
 
       {/* Mobile Menu Dropdown */}
-      {isMenuOpen && (
-        <div className="mobile-menu">
-          <ul className="mobile-menu-list">
-            {menuItems.map((item) => (
-              <li key={item.name} className="mobile-menu-item">
-                <Link
-                  to={item.path}
-                  className="mobile-menu-link"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
-              </li>
-            ))}
-
-            {/* Mobile Auth Buttons */}
-            {!user ? (
-              <>
-                <li className="mobile-menu-item">
+      {
+        isMenuOpen && (
+          <div className="mobile-menu">
+            <ul className="mobile-menu-list">
+              {menuItems.map((item) => (
+                <li key={item.name} className="mobile-menu-item">
                   <Link
-                    to="/login"
-                    className="mobile-menu-link auth-link"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <span className="mobile-auth-icon">🔑</span>
-                    Sign In
-                  </Link>
-                </li>
-                <li className="mobile-menu-item">
-                  <Link
-                    to="/register"
-                    className="mobile-menu-link auth-link signup"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <span className="mobile-auth-icon">👤</span>
-                    Sign Up
-                  </Link>
-                </li>
-              </>
-            ) : (
-              <>
-                <li className="mobile-menu-item">
-                  <Link
-                    to="/profile"
+                    to={item.path}
                     className="mobile-menu-link"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <span className="mobile-auth-icon">👤</span>
-                    My Profile
+                    {item.name}
                   </Link>
                 </li>
-                <li className="mobile-menu-item">
-                  <button
-                    onClick={handleLogout}
-                    className="mobile-menu-link logout-btn"
-                  >
-                    <span className="mobile-auth-icon">🚪</span>
-                    Logout
-                  </button>
-                </li>
-              </>
-            )}
+              ))}
 
-            <li className="mobile-menu-search">
-              <form onSubmit={handleSearch} className="mobile-search-form">
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="mobile-search-input"
-                />
-                <button type="submit" className="mobile-search-button">
-                  🔍
-                </button>
-              </form>
-            </li>
-          </ul>
-        </div>
-      )}
-    </nav>
+              {!user || user.role !== 'admin' ? (
+                <>
+                  <li className="mobile-menu-item">
+                    <div className="mobile-menu-link" onClick={() => setMobileGenreOpen(!mobileGenreOpen)}>
+                      Genre {mobileGenreOpen ? '▲' : '▼'}
+                    </div>
+                    {mobileGenreOpen && (
+                      <div className="mobile-mega-menu">
+                        {genres.map((genre) => (
+                          <Link
+                            key={genre.id}
+                            to={`/search?genre=${encodeURIComponent(genre.name)}`}
+                            className="mobile-mega-item"
+                            onClick={() => setIsMenuOpen(false)}
+                          >
+                            {genre.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </li>
+                </>
+              ) : null}
+
+              {/* Mobile Auth Buttons */}
+              {!user ? (
+                <>
+                  <li className="mobile-menu-item">
+                    <Link
+                      to="/login"
+                      className="mobile-menu-link auth-link"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span className="mobile-auth-icon">🔑</span>
+                      Sign In
+                    </Link>
+                  </li>
+                  <li className="mobile-menu-item">
+                    <Link
+                      to="/register"
+                      className="mobile-menu-link auth-link signup"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span className="mobile-auth-icon">👤</span>
+                      Sign Up
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="mobile-menu-item">
+                    <Link
+                      to="/profile"
+                      className="mobile-menu-link"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <span className="mobile-auth-icon">👤</span>
+                      My Profile
+                    </Link>
+                  </li>
+                  <li className="mobile-menu-item">
+                    <button
+                      onClick={handleLogout}
+                      className="mobile-menu-link logout-btn"
+                    >
+                      <span className="mobile-auth-icon">🚪</span>
+                      Logout
+                    </button>
+                  </li>
+                </>
+              )}
+
+              <li className="mobile-menu-search">
+                <form onSubmit={handleSearch} className="mobile-search-form">
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="mobile-search-input"
+                  />
+                  <button type="submit" className="mobile-search-button">
+                    🔍
+                  </button>
+                </form>
+              </li>
+            </ul>
+          </div >
+        )}
+    </nav >
   );
 };
 

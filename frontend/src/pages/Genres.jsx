@@ -3,11 +3,14 @@ import { recommendationAPI } from '../utils/api';
 import MovieCard from '../components/MovieCard';
 import './Home.css'; // Re-use Home styles for consistency
 
-const Genres = ({ watchlistIds, onToggleWatchlist }) => {
+const Genres = ({ user, watchlistIds, onToggleWatchlist }) => {
     const [genreMovies, setGenreMovies] = useState({});
     const [loading, setLoading] = useState(true);
 
-    const targetGenres = ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Romance', 'Thriller', 'Animation', 'Fantasy', 'Crime'];
+    const preferredGenres = user?.preferences?.preferred_genres || [];
+    const targetGenres = preferredGenres.length > 0
+        ? preferredGenres
+        : ['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Romance', 'Thriller', 'Animation', 'Fantasy', 'Crime'];
 
     useEffect(() => {
         const fetchAllGenres = async () => {

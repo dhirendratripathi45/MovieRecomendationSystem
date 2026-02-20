@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { recommendationAPI } from '../utils/api';
 import MovieCard from '../components/MovieCard';
 
-const Trending = ({ watchlistIds, onToggleWatchlist }) => {
+const Trending = ({ user, watchlistIds, onToggleWatchlist }) => {
     const [movies, setMovies] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -10,7 +10,18 @@ const Trending = ({ watchlistIds, onToggleWatchlist }) => {
         const fetchTrending = async () => {
             try {
                 const res = await recommendationAPI.getTrending();
-                setMovies(res.data);
+                let data = res.data || [];
+
+                // Filter by preferred genres if available
+                const preferredGenres = user?.preferences?.preferred_genres || [];
+                if (preferredGenres.length > 0) {
+                    data = data.filter(m =>
+                        m.genres_list?.some(g => preferredGenres.includes(g)) ||
+                        m.genres?.some(g => preferredGenres.includes(g.name))
+                    );
+                }
+
+                setMovies(data);
             } catch (err) {
                 console.error("Error fetching trending", err);
             } finally {

@@ -2,7 +2,10 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
+from flask_caching import Cache
 from config import Config
+from extensions import cache
+
 from auth.routes import auth_bp
 from recommendation.routes import recommendation_bp
 from watchlist.routes import watchlist_bp
@@ -17,6 +20,9 @@ def create_app():
     CORS(app, resources={r"/api/*": {"origins": app.config['CORS_ORIGINS']}}, supports_credentials=True)
     bcrypt = Bcrypt(app)
     jwt = JWTManager(app)
+    
+    # Initialize Cache with app
+    cache.init_app(app)
     
     # Connect to MongoDB
     connect(

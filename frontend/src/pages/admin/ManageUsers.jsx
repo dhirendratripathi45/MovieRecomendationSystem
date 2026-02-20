@@ -135,7 +135,7 @@ const ManageUsers = () => {
                                             {userDetails.watchlist?.length > 0 ? (
                                                 userDetails.watchlist.slice(0, 5).map(w => (
                                                     <div key={w.id} className="watchlist-item-mini">
-                                                        🎬 {w.title}
+                                                        🎥 {w.title}
                                                     </div>
                                                 ))
                                             ) : <p className="empty-msg">No movies in watchlist</p>}

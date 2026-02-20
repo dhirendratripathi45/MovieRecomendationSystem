@@ -8,10 +8,12 @@ class ModelLoader:
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(ModelLoader, cls).__new__(cls)
-            cls._instance._load_models()
+            cls._instance._initialized = False
         return cls._instance
     
     def _load_models(self):
+        if self._initialized: return
+        
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         models_dir = os.path.join(base_dir, 'models')
         dataset_dir = os.path.join(base_dir, 'dataset')
@@ -55,16 +57,21 @@ class ModelLoader:
                 # content_movie_indices usually maps Key -> Matrix Index
                 self.content_inv_indices = {v: k for k, v in self.content_movie_indices.items()}
                 
+            self._initialized = True
             print("Models loaded successfully.")
         except Exception as e:
             print(f"Error loading models: {e}")
+            self._initialized = False # Allow retrying if it failed
 
     def get_collaborative_model(self):
+        self._load_models()
         return self.knn_model, self.user_item_matrix, self.movie_mapper, self.movie_inv_mapper, self.user_mapper
 
     def get_content_model(self):
+        self._load_models()
         return self.tfidf_matrix, self.content_movie_indices
         
     def get_content_inv_indices(self):
+        self._load_models()
         return self.content_inv_indices
 

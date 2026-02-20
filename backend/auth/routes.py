@@ -29,6 +29,11 @@ def register():
             password_hash=hashed_password
         )
         
+        # Save preferred genres if provided
+        if 'genres' in data and isinstance(data['genres'], list):
+            from models import UserPreference
+            user.preferences = UserPreference(preferred_genres=data['genres'])
+        
         user.save()
         
         # Create token
@@ -160,6 +165,13 @@ def update_profile():
             user.email = data['email']
         if 'profile_picture' in data:
             user.profile_picture = data['profile_picture']
+        
+        if 'genres' in data and isinstance(data['genres'], list):
+            from models import UserPreference
+            if not user.preferences:
+                user.preferences = UserPreference(preferred_genres=data['genres'])
+            else:
+                user.preferences.preferred_genres = data['genres']
             
         user.save()
         

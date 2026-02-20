@@ -72,6 +72,17 @@ const Profile = ({ user }) => {
                             </div>
                         </div>
 
+                        {userData?.preferences?.preferred_genres?.length > 0 && (
+                            <div className="profile-genres-list">
+                                <span className="genres-label">Preferred Genres:</span>
+                                <div className="genre-tags">
+                                    {userData.preferences.preferred_genres.map(genre => (
+                                        <span key={genre} className="genre-tag">{genre}</span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         <div className="profile-actions">
                             <button onClick={() => navigate('/settings')} className="edit-btn">Edit Profile</button>
                             {userData?.role === 'admin' && (

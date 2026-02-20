@@ -2,9 +2,31 @@ import React from 'react';
 import './MovieCard.css';
 
 const MovieCard = ({ movie, onToggleWatchlist, isInWatchlist }) => {
+    const [isVisible, setIsVisible] = React.useState(false);
     const [poster, setPoster] = React.useState(null);
+    const cardRef = React.useRef(null);
 
     React.useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (cardRef.current) {
+            observer.observe(cardRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, []);
+
+    React.useEffect(() => {
+        if (!isVisible) return;
+
         const fetchPoster = async () => {
             if (movie.poster_path) {
                 if (movie.poster_path.startsWith('http')) {
@@ -12,7 +34,7 @@ const MovieCard = ({ movie, onToggleWatchlist, isInWatchlist }) => {
                 } else if (movie.poster_path.startsWith('/static')) {
                     setPoster(`http://localhost:5000${movie.poster_path}`);
                 } else {
-                    setPoster(`https://image.tmdb.org/t/p/w500${movie.poster_path}`);
+                    setPoster(`https://image.tmdb.org/t/p/w300${movie.poster_path}`);
                 }
                 return;
             }
@@ -34,7 +56,7 @@ const MovieCard = ({ movie, onToggleWatchlist, isInWatchlist }) => {
         };
 
         fetchPoster();
-    }, [movie.poster_path, movie.title]);
+    }, [isVisible, movie.poster_path, movie.title]);
 
     const handleImageError = (e) => {
         e.target.onerror = null;
@@ -62,7 +84,7 @@ const MovieCard = ({ movie, onToggleWatchlist, isInWatchlist }) => {
     const firstGenre = genresString ? genresString.split(',')[0] : 'Unknown Genre';
 
     return (
-        <div className="movie-grid-card" onClick={handleClick}>
+        <div ref={cardRef} className="movie-grid-card" onClick={handleClick}>
             <div className="poster-container" style={{ background: '#1a1a1a' }}>
                 {poster ? (
                     <img

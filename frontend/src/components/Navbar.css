@@ -605,3 +605,114 @@
     height: 30px;
   }
 }
+
+/* Mega Menu Dropdown Styles */
+.mega-menu-container {
+  position: relative;
+}
+
+.mega-menu {
+  position: absolute;
+  top: calc(100% + 15px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  background: #141414;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+  padding: 2.5rem;
+  z-index: 1002;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  animation: megaMenuFade 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes megaMenuFade {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.mega-menu::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 10px 10px 10px;
+  border-style: solid;
+  border-color: transparent transparent #141414 transparent;
+}
+
+.mega-menu-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.mega-menu-item {
+  color: #a0a0a0;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: var(--transition);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mega-menu-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mega-menu-item.active {
+  color: var(--primary-color);
+  background: rgba(255, 45, 127, 0.1);
+  font-weight: 600;
+}
+
+/* Mobile adjustments for mega menu */
+@media (max-width: 1024px) {
+  .mega-menu {
+    width: 90vw;
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .mega-menu {
+    display: none;
+    /* Hide on mobile, show only in mobile sidebar if needed */
+  }
+
+  .mobile-mega-menu {
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .mobile-mega-item {
+    padding: 0.8rem 1rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 1rem;
+    border-radius: 6px;
+  }
+
+  .mobile-mega-item:active {
+    background: rgba(255, 45, 127, 0.1);
+    color: var(--primary-color);
+  }
+}

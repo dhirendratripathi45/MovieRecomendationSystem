@@ -152,9 +152,8 @@ const ManageMovies = () => {
                                                 movie.poster_path.startsWith('http') ? movie.poster_path :
                                                     movie.poster_path.startsWith('/static') ? `http://localhost:5000${movie.poster_path}` :
                                                         `https://image.tmdb.org/t/p/w92${movie.poster_path}`
-                                            ) : `https://placehold.co/40x60?text=🎬`}
+                                            ) : `https://placehold.co/40x60?text=🎥`}
                                             alt={movie.title}
-                                            className="table-thumb"
                                         />
                                     </td>
                                     <td className="movie-title-cell">

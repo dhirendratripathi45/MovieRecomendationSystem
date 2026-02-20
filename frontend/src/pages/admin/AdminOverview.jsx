@@ -52,7 +52,7 @@ const AdminOverview = () => {
                     </div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-icon">🎬</div>
+                    <div className="stat-icon">🎥</div>
                     <div className="stat-info">
                         <h3>Total Movies</h3>
                         <p>{stats.movies}</p>

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authAPI } from '../utils/api';
+import { authAPI, recommendationAPI } from '../utils/api';
 import './Login.css';
 
 const Register = ({ onLogin }) => {  // Add onLogin prop
@@ -11,9 +11,23 @@ const Register = ({ onLogin }) => {  // Add onLogin prop
     password: '',
     confirmPassword: ''
   });
+  const [availableGenres, setAvailableGenres] = useState([]);
+  const [selectedGenres, setSelectedGenres] = useState([]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [registerError, setRegisterError] = useState('');
+
+  useEffect(() => {
+    const fetchGenres = async () => {
+      try {
+        const response = await recommendationAPI.getGenres();
+        setAvailableGenres(response.data);
+      } catch (error) {
+        console.error('Failed to fetch genres:', error);
+      }
+    };
+    fetchGenres();
+  }, []);
 
   const validateForm = () => {
     const newErrors = {};
@@ -40,6 +54,10 @@ const Register = ({ onLogin }) => {  // Add onLogin prop
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    if (selectedGenres.length === 0) {
+      newErrors.genres = 'Please select at least one genre';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -59,6 +77,17 @@ const Register = ({ onLogin }) => {  // Add onLogin prop
     setRegisterError('');
   };
 
+  const toggleGenre = (genreId) => {
+    if (selectedGenres.includes(genreId)) {
+      setSelectedGenres(selectedGenres.filter(id => id !== genreId));
+    } else {
+      setSelectedGenres([...selectedGenres, genreId]);
+    }
+    if (errors.genres) {
+      setErrors({ ...errors, genres: '' });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -72,7 +101,8 @@ const Register = ({ onLogin }) => {  // Add onLogin prop
       const response = await authAPI.register({
         username: formData.username,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
+        genres: selectedGenres
       });
 
       const { user, token } = response.data;
@@ -92,7 +122,7 @@ const Register = ({ onLogin }) => {  // Add onLogin prop
       <div className="login-card">
         <div className="login-header">
           <div className="logo">
-            <span className="logo-icon">🎬</span>
+            <span className="logo-icon">🌐</span>
             <span className="logo-text">MovieRec</span>
           </div>
           <h1>Create Account</h1>
@@ -166,6 +196,22 @@ const Register = ({ onLogin }) => {  // Add onLogin prop
             {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
           </div>
 
+          <div className="genre-selection-container">
+            <h3>Select Your Favorite Genres</h3>
+            <div className="genre-grid">
+              {availableGenres.map((genre) => (
+                <div
+                  key={genre.id}
+                  className={`genre-item ${selectedGenres.includes(genre.name) ? 'selected' : ''}`}
+                  onClick={() => toggleGenre(genre.name)}
+                >
+                  {genre.name}
+                </div>
+              ))}
+            </div>
+            {errors.genres && <span className="error-text">{errors.genres}</span>}
+          </div>
+
           <div className="form-options">
             <div className="remember-me">
               <input type="checkbox" id="terms" required />
@@ -194,7 +240,7 @@ const Register = ({ onLogin }) => {  // Add onLogin prop
         <div className="signup-link">
           Already have an account? <Link to="/login">Sign in</Link>
         </div>
-      </div>
+      </div >
 
       <div className="login-sidebar">
         <div className="sidebar-content">
@@ -225,7 +271,7 @@ const Register = ({ onLogin }) => {  // Add onLogin prop
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

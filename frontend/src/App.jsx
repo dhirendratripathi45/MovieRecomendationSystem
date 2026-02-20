@@ -1,26 +1,35 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import './App.css';
 import Navbar from './components/Navbar';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import MovieDetail from './pages/MovieDetail';
-import Profile from './pages/Profile';
-import Recommendations from './pages/Recommendations';
-import Watchlist from './pages/Watchlist';
-import Trending from './pages/Trending';
-import Genres from './pages/Genres';
-import RatedMovies from './pages/RatedMovies';
-import Settings from './pages/Settings';
-import AdminLayout from './pages/admin/AdminLayout';
-import AdminOverview from './pages/admin/AdminOverview';
-import ManageMovies from './pages/admin/ManageMovies';
-import AddMovie from './pages/admin/AddMovie';
-import EditMovie from './pages/admin/EditMovie';
-import ManageUsers from './pages/admin/ManageUsers';
-import Search from './pages/Search';
 import { watchlistAPI } from './utils/api';
+
+// Lazy load components
+const Home = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Login'));
+const Register = lazy(() => import('./pages/Register'));
+const MovieDetail = lazy(() => import('./pages/MovieDetail'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Recommendations = lazy(() => import('./pages/Recommendations'));
+const Watchlist = lazy(() => import('./pages/Watchlist'));
+const Trending = lazy(() => import('./pages/Trending'));
+const Genres = lazy(() => import('./pages/Genres'));
+const RatedMovies = lazy(() => import('./pages/RatedMovies'));
+const Settings = lazy(() => import('./pages/Settings'));
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminOverview = lazy(() => import('./pages/admin/AdminOverview'));
+const ManageMovies = lazy(() => import('./pages/admin/ManageMovies'));
+const AddMovie = lazy(() => import('./pages/admin/AddMovie'));
+const EditMovie = lazy(() => import('./pages/admin/EditMovie'));
+const ManageUsers = lazy(() => import('./pages/admin/ManageUsers'));
+const Search = lazy(() => import('./pages/Search'));
+
+const PageLoader = () => (
+  <div className="loading-screen">
+    <div className="loading-spinner"></div>
+    <p>Loading...</p>
+  </div>
+);
 
 function App() {
   const [user, setUser] = useState(null);
@@ -95,59 +104,62 @@ function App() {
     <Router>
       <div className="app">
         {user && <Navbar onSearch={handleSearch} user={user} onLogout={handleLogout} />}
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              user ? <Navigate to={user.role === 'admin' ? '/admin' : '/'} /> : <Login onLogin={handleLogin} />
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              user ? <Navigate to={user.role === 'admin' ? '/admin' : '/'} /> : <Register onLogin={handleLogin} />
-            }
-          />
-          <Route
-            path="/"
-            element={
-              user ? (user.role === 'admin' ? <Navigate to="/admin" /> : <Home user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} />) : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/recommendations"
-            element={
-              user ? <Recommendations user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/watchlist"
-            element={
-              user ? <Watchlist user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />
-            }
-          />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                user ? <Navigate to={user.role === 'admin' ? '/admin' : '/'} /> : <Login onLogin={handleLogin} />
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                user ? <Navigate to={user.role === 'admin' ? '/admin' : '/'} /> : <Register onLogin={handleLogin} />
+              }
+            />
+            <Route
+              path="/"
+              element={
+                user ? (user.role === 'admin' ? <Navigate to="/admin" /> : <Home user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} />) : <Navigate to="/login" />
+              }
+            />
+            <Route
+              path="/recommendations"
+              element={
+                user ? <Recommendations user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />
+              }
+            />
+            <Route
+              path="/watchlist"
+              element={
+                user ? <Watchlist user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />
+              }
+            />
 
 
-          <Route
-            path="/admin"
-            element={
-              user?.role === 'admin' ? <AdminLayout /> : <Navigate to="/" />
-            }
-          >
-            <Route index element={<AdminOverview />} />
-            <Route path="movies" element={<ManageMovies />} />
-            <Route path="add-movie" element={<AddMovie />} />
-            <Route path="edit-movie/:id" element={<EditMovie />} />
-            <Route path="users" element={<ManageUsers />} />
-          </Route>
-          <Route path="/profile" element={user ? <Profile user={user} /> : <Navigate to="/login" />} />
-          <Route path="/trending" element={user ? <Trending watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />} />
-          <Route path="/genres" element={user ? <Genres watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />} />
-          <Route path="/rated" element={user ? <RatedMovies user={user} /> : <Navigate to="/login" />} />
-          <Route path="/search" element={user ? <Search watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />} />
-          <Route path="/settings" element={user ? <Settings user={user} /> : <Navigate to="/login" />} />
-          <Route path="/movie/:id" element={user ? <MovieDetail user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />} />
-        </Routes>
+            <Route
+              path="/admin"
+              element={
+                user?.role === 'admin' ? <AdminLayout /> : <Navigate to="/" />
+              }
+            >
+              <Route index element={<AdminOverview />} />
+              <Route path="movies" element={<ManageMovies />} />
+              <Route path="add-movie" element={<AddMovie />} />
+              <Route path="edit-movie/:id" element={<EditMovie />} />
+              <Route path="users" element={<ManageUsers />} />
+            </Route>
+            <Route path="/profile" element={user ? <Profile user={user} /> : <Navigate to="/login" />} />
+            <Route path="/trending" element={user ? <Trending user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />} />
+            <Route path="/genres" element={user ? <Genres user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />} />
+            <Route path="/rated" element={user ? <RatedMovies user={user} /> : <Navigate to="/login" />} />
+            <Route path="/search" element={user ? <Search watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />} />
+            <Route path="/viewall" element={user ? <Search watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />} />
+            <Route path="/settings" element={user ? <Settings user={user} /> : <Navigate to="/login" />} />
+            <Route path="/movie/:id" element={user ? <MovieDetail user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} /> : <Navigate to="/login" />} />
+          </Routes>
+        </Suspense>
       </div>
     </Router>
 

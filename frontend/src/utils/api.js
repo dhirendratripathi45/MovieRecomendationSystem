@@ -69,8 +69,8 @@ export const recommendationAPI = {
   getArrivingSoon: () => API.get('/recommend/arriving-soon'),
   getMostRated: () => API.get('/recommend/most-rated'),
   getMostViewed: () => API.get('/recommend/most-viewed'),
-  getAll: (page = 1, limit = 20, genre = '', search = '') =>
-    API.get(`/recommend/all?page=${page}&limit=${limit}&genre=${genre ? encodeURIComponent(genre) : ''}&search=${search ? encodeURIComponent(search) : ''}`),
+  getAll: (page = 1, limit = 20, genre = '', search = '', country = '') =>
+    API.get(`/recommend/all?page=${page}&limit=${limit}&genre=${genre ? encodeURIComponent(genre) : ''}&search=${search ? encodeURIComponent(search) : ''}&country=${country ? encodeURIComponent(country) : ''}`),
   getGenres: () => API.get('/recommend/genres'),
   getMoviesByGenre: (genreId) => API.get(`/recommend/genres/${genreId}`),
   getMovie: (id) => API.get(`/recommend/movie/${id}`),
