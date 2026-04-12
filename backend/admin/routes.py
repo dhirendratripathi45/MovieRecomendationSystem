@@ -240,7 +240,18 @@ def add_movie():
 
         genre_names = data.get('genres', [])
         # Provide both full objects and list of names for compatibility
-        genre_objs = list(Genre.objects(name__in=genre_names))
+        existing_genres = {g.name: g for g in Genre.objects(name__in=genre_names)}
+        genre_objs = []
+        for g_name in genre_names:
+            if g_name in existing_genres:
+                genre_objs.append(existing_genres[g_name])
+            else:
+                new_tmdb_id = random.randint(100000, 999999)
+                while Genre.objects(tmdb_id=new_tmdb_id).first():
+                    new_tmdb_id = random.randint(100000, 999999)
+                new_genre = Genre(name=g_name, tmdb_id=new_tmdb_id, description=f"Added dynamically")
+                new_genre.save()
+                genre_objs.append(new_genre)
 
         movie = Movie(
             tmdb_id=tmdb_id,
@@ -302,16 +313,43 @@ def update_movie(id):
                 except:
                     genre_names = []
                 movie.genres_list = genre_names
-                movie.genres = list(Genre.objects(name__in=genre_names))
+                
+                existing_genres = {g.name: g for g in Genre.objects(name__in=genre_names)}
+                genre_objs = []
+                import random
+                for g_name in genre_names:
+                    if g_name in existing_genres:
+                        genre_objs.append(existing_genres[g_name])
+                    else:
+                        new_tmdb_id = random.randint(100000, 999999)
+                        while Genre.objects(tmdb_id=new_tmdb_id).first():
+                            new_tmdb_id = random.randint(100000, 999999)
+                        new_genre = Genre(name=g_name, tmdb_id=new_tmdb_id)
+                        new_genre.save()
+                        genre_objs.append(new_genre)
+                movie.genres = genre_objs
         
         else:
             data = request.get_json() or {}
             if 'is_trending' in data: movie.is_trending = data['is_trending']
             if 'is_arriving_soon' in data: movie.is_arriving_soon = data['is_arriving_soon']
             if 'genres' in data:
-                # Expecting list of strings from JSON
-                 movie.genres_list = data['genres']
-                 movie.genres = list(Genre.objects(name__in=data['genres']))
+                 genre_names = data['genres']
+                 movie.genres_list = genre_names
+                 existing_genres = {g.name: g for g in Genre.objects(name__in=genre_names)}
+                 genre_objs = []
+                 import random
+                 for g_name in genre_names:
+                     if g_name in existing_genres:
+                         genre_objs.append(existing_genres[g_name])
+                     else:
+                         new_tmdb_id = random.randint(100000, 999999)
+                         while Genre.objects(tmdb_id=new_tmdb_id).first():
+                             new_tmdb_id = random.randint(100000, 999999)
+                         new_genre = Genre(name=g_name, tmdb_id=new_tmdb_id)
+                         new_genre.save()
+                         genre_objs.append(new_genre)
+                 movie.genres = genre_objs
 
         # Common fields
         if 'title' in data: movie.title = data['title']

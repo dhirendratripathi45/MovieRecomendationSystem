@@ -1,17 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700&display=swap');
 
 :root {
-  /* Colors */
-  --bg-dark: #f8f9fa;
-  --bg-card: #ffffff;
-  --bg-glass: rgba(255, 255, 255, 0.8);
-  --primary-color: #ff2d7f;
-  --primary-hover: #ff5b9d;
-  --text-primary: #1a1a1a;
-  --text-secondary: #4a4a4a;
-  --text-muted: #888888;
-  --border-glass: rgba(0, 0, 0, 0.1);
-  --pink-glow: 0 10px 30px rgba(255, 45, 127, 0.15);
+  /* Colors - Cinematic Dark Theme */
+  --bg-dark: #0a0a0c;
+  --bg-card: #141416;
+  --bg-glass: rgba(20, 20, 22, 0.75);
+  --primary-color: #e50914; /* Cinema Red */
+  --primary-hover: #ff0f1a;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --text-muted: #808080;
+  --border-glass: rgba(255, 255, 255, 0.08);
+  --pink-glow: 0 10px 30px rgba(229, 9, 20, 0.2);
 
   /* Layout */
   --header-height: 80px;
@@ -23,7 +23,7 @@
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color-scheme: light;
+  color-scheme: dark;
   color: var(--text-primary);
   background-color: var(--bg-dark);
 }
@@ -87,7 +87,7 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #ccc;
+  background: #333;
   border-radius: 10px;
 }
 

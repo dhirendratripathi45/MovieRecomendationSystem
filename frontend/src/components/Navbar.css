@@ -1,12 +1,12 @@
 /* Navbar.css */
 :root {
-  --primary-color: #ff2d7f;
-  --secondary-color: #ffffff;
-  --text-color: #1a1a1a;
-  --text-secondary: #4a4a4a;
-  --hover-color: #ff5b9d;
-  --bg-color: rgba(255, 255, 255, 0.9);
-  --border-color: rgba(0, 0, 0, 0.08);
+  --primary-color: #e50914;
+  --secondary-color: #0a0a0c;
+  --text-color: #ffffff;
+  --text-secondary: #b3b3b3;
+  --hover-color: #ff0f1a;
+  --bg-color: rgba(20, 20, 22, 0.9);
+  --border-color: rgba(255, 255, 255, 0.08);
   --transition: all 0.3s ease;
 }
 

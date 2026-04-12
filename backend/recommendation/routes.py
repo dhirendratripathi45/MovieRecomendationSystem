@@ -6,7 +6,7 @@ import numpy as np
 import re
 import requests
 from config import Config
-from models import Movie, Genre, User, UserRating, RatedMovie
+from models import Movie, Genre, User, UserRating, RatedMovie, Watchlist
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 import threading
@@ -25,9 +25,9 @@ def fetch_and_save_poster(movie_id, tmdb_id):
             movie = Movie.objects(id=movie_id).first()
             if not movie: return
             
-            # Try TMDB First
+            # Try TMDB First (only if key is properly configured)
             api_key = Config.TMDB_API_KEY
-            if api_key:
+            if api_key and api_key not in ('', 'your_tmdb_api_key_here'):
                 url = f"{Config.TMDB_BASE_URL}/movie/{tmdb_id}?api_key={api_key}"
                 response = requests.get(url, timeout=5)
                 if response.status_code == 200:
@@ -72,6 +72,8 @@ def get_all_movies():
         country = request.args.get('country')
         search = request.args.get('search')
         
+        randomize = request.args.get('randomize', 'false').lower() == 'true'
+        
         query = Movie.objects
         
         if genre and genre != 'All':
@@ -91,7 +93,20 @@ def get_all_movies():
             query = query(title__icontains=search)
             
         total = query.count()
-        movies = query.skip((page - 1) * limit).limit(limit)
+        
+        if randomize and total > 0:
+            import random
+            if total <= limit:
+                movies = list(query.all())
+                random.shuffle(movies)
+            else:
+                pool_size = min(total, limit * 3) 
+                random_offset = random.randint(0, total - pool_size)
+                movies_pool = list(query.skip(random_offset).limit(pool_size))
+                random.shuffle(movies_pool)
+                movies = movies_pool[:limit]
+        else:
+            movies = list(query.skip((page - 1) * limit).limit(limit))
         
         # Trigger background poster checks for these movies (DISABLED for speed)
         # for m in movies:
@@ -109,44 +124,79 @@ def get_all_movies():
 @recommendation_bp.route('/collaborative/<user_id>', methods=['GET'])
 def recommend_collaborative(user_id):
     try:
-        user_id = int(user_id)
-        knn, user_item_matrix, movie_mapper, movie_inv_mapper, user_mapper = loader.get_collaborative_model()
+        from sklearn.metrics.pairwise import cosine_similarity
+        import numpy as np
         
-        if knn is None:
-            return jsonify({'error': 'Model not loaded'}), 500
+        target_user = User.objects(id=str(user_id)).first()
+        if not target_user:
+            return jsonify({'error': 'User not found'}), 404
 
-        # Logic for User Recommendation
-        user = User.objects(id=str(user_id)).first() 
+        target_uid = str(target_user.id)
+        user_ratings = {}
+
+        def add_rating(uid, mid, score):
+            if uid not in user_ratings:
+                user_ratings[uid] = {}
+            if mid not in user_ratings[uid] or user_ratings[uid][mid] < score:
+                user_ratings[uid][mid] = score
+
+        for u in User.objects():
+            uid = str(u.id)
+            if u.ratings:
+                for r in u.ratings:
+                    add_rating(uid, r.movie_id, r.score)
+
+        for rm in RatedMovie.objects():
+            if rm.user:
+                add_rating(str(rm.user.id), rm.movie_id, rm.score)
+
+        for w in Watchlist.objects():
+            if w.user:
+                add_rating(str(w.user.id), w.movie_id, 4.0)
+
+        if target_uid not in user_ratings or not user_ratings[target_uid]:
+             return recommend_popular_watchlists()
+
+        all_movies = set()
+        for u_data in user_ratings.values():
+            all_movies.update(u_data.keys())
+
+        movie_list = list(all_movies)
+        movie_index = {m_id: idx for idx, m_id in enumerate(movie_list)}
         
-        live_ratings = {}
-        if user and user.ratings:
-            for r in user.ratings:
-                live_ratings[r.movie_id] = r.score
-                
+        user_list = list(user_ratings.keys())
+        target_idx = user_list.index(target_uid)
+
+        matrix = np.zeros((len(user_list), len(movie_list)))
+        for i, uid in enumerate(user_list):
+            for m_id, score in user_ratings[uid].items():
+                matrix[i, movie_index[m_id]] = score
+
+        target_vec = matrix[target_idx].reshape(1, -1)
+        similarities = cosine_similarity(target_vec, matrix).flatten()
+        similarities[target_idx] = -1.0 # Exclude self
+        
+        similar_users_indices = similarities.argsort()[::-1][:10]
+
         recommendations = {}
-        
-        # Top 5 recent favorites
-        sorted_live = sorted(live_ratings.items(), key=lambda x: x[1], reverse=True)[:5] 
-        
-        if not sorted_live:
-             # Fallback to trending if no ratings
-             return recommend_trending()
-             
-        for m_id, score in sorted_live:
-            if m_id in movie_mapper:
-                idx = movie_mapper[m_id]
-                m_vec = user_item_matrix.getrow(idx)
-                distances, indices = knn.kneighbors(m_vec, n_neighbors=6)
-                
-                for i in range(1, len(indices[0])):
-                    neighbor_idx = indices[0][i]
-                    if neighbor_idx in movie_inv_mapper:
-                        n_id = movie_inv_mapper[neighbor_idx]
-                        if n_id not in live_ratings:
-                            recommendations[n_id] = recommendations.get(n_id, 0) + score 
-                            
+        target_seen = user_ratings[target_uid]
+
+        for idx in similar_users_indices:
+            sim_score = similarities[idx]
+            if sim_score <= 0.01:
+                break
+
+            uid = user_list[idx]
+            for m_id, score in user_ratings[uid].items():
+                if m_id not in target_seen:
+                    current = recommendations.get(m_id, 0)
+                    recommendations[m_id] = current + (sim_score * score)
+
         sorted_recs = sorted(recommendations.items(), key=lambda x: x[1], reverse=True)[:20]
-        rec_ids = [rid for rid, _ in sorted_recs]
+        rec_ids = [m_id for m_id, _ in sorted_recs]
+        
+        if not rec_ids:
+             return recommend_popular_watchlists()
         
         movies = Movie.objects(movie_id__in=rec_ids)
         movie_map = {m.movie_id: m for m in movies}
@@ -155,9 +205,9 @@ def recommend_collaborative(user_id):
         for mid, score in sorted_recs:
              if mid in movie_map:
                  movie_obj = movie_map[mid]
-                 # ensure_poster(movie_obj)
+                 ensure_poster(movie_obj)
                  d = movie_obj.to_dict()
-                 d['match_score'] = min(98, int(score * 10) + 50) 
+                 d['match_score'] = min(98, max(50, int(score * 10) + 50))
                  rec_list.append(d)
                  
         return jsonify(rec_list)
@@ -176,9 +226,10 @@ def recommend_hybrid(user_id):
     """
     try:
         # 1. Setup Weights
-        # Default weights, could be customized per user or system settings
-        w_collab = 0.6
-        w_content = 0.4
+        # Adjusted weights to accommodate the recency factor
+        w_collab = 0.5
+        w_content = 0.3
+        w_recency = 0.2
         
         user = User.objects(id=str(user_id)).first()
         if not user:
@@ -186,7 +237,7 @@ def recommend_hybrid(user_id):
             
         ratings_dict = {r.movie_id: r.score for r in user.ratings}
         if not ratings_dict:
-            return recommend_trending()
+            return recommend_most_viewed()
 
         # 2. Get Collaborative Scores (KNN)
         knn, user_item_matrix, movie_mapper, movie_inv_mapper, _ = loader.get_collaborative_model()
@@ -225,21 +276,39 @@ def recommend_hybrid(user_id):
                         # cosine_sim[si] is the similarity score (0 to 1)
                         content_scores[sim_mid] = content_scores.get(sim_mid, 0) + cosine_sim[si] * score
 
-        # 4. Mathematically Combine Scores
-        all_candidate_ids = set(collab_scores.keys()) | set(content_scores.keys())
+        # 4. Mathematically Combine Scores with Recency
+        all_candidate_ids = list(set(collab_scores.keys()) | set(content_scores.keys()))
         final_recs = []
         
         # Normalization factors (to bring both onto similar scales)
         max_collab = max(collab_scores.values()) if collab_scores else 1
         max_content = max(content_scores.values()) if content_scores else 1
 
+        # Fetch all candidate movies to calculate recency boost
+        movies_candidates = Movie.objects(movie_id__in=all_candidate_ids)
+        movie_map_candidates = {m.movie_id: m for m in movies_candidates}
+        now = datetime.utcnow()
+
         for mid in all_candidate_ids:
             # Normalized individual scores
             norm_collab = collab_scores.get(mid, 0) / max_collab
             norm_content = content_scores.get(mid, 0) / max_content
             
-            # Hybrid Calculation
-            hybrid_score = (w_collab * norm_collab) + (w_content * norm_content)
+            # Recency Calculation (Boost newer movies)
+            recency_score = 0
+            m_obj = movie_map_candidates.get(mid)
+            if m_obj and m_obj.created_at:
+                days_old = (now - m_obj.created_at).days
+                if days_old <= 30:
+                    recency_score = 1.0
+                elif days_old >= 365:
+                    recency_score = 0.0
+                else:
+                    # Linear decay from 1.0 (at 30 days) down to 0.0 (at 365 days)
+                    recency_score = 1.0 - ((days_old - 30) / 335)
+            
+            # Hybrid Calculation with Recency Factor
+            hybrid_score = (w_collab * norm_collab) + (w_content * norm_content) + (w_recency * recency_score)
             final_recs.append((mid, hybrid_score))
 
         # 5. Sort and Fetch Movie Details
@@ -333,15 +402,8 @@ def recommend_trending():
         limit = 20
         admin_trending = list(Movie.objects(is_trending=True).order_by('-updated_at').limit(limit))
         
-        needed = limit - len(admin_trending)
-        
-        if needed > 0:
-            ids_exclude = [m.id for m in admin_trending]
-            more_movies = Movie.objects(id__nin=ids_exclude).order_by('-release_year', '-movie_id').limit(needed)
-            admin_trending.extend(list(more_movies))
-            
-         # for m in admin_trending:
-        #     ensure_poster(m)
+        for m in admin_trending:
+            ensure_poster(m)
             
         return jsonify([m.to_dict() for m in admin_trending])
     except Exception as e:
@@ -352,8 +414,8 @@ def recommend_trending():
 def recommend_arriving_soon():
     try:
         movies = Movie.objects(is_arriving_soon=True).order_by('-release_year', '-movie_id').limit(20)
-        # for m in movies:
-        #     ensure_poster(m)
+        for m in movies:
+            ensure_poster(m)
         return jsonify([m.to_dict() for m in movies])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -389,9 +451,40 @@ def recommend_most_viewed():
     try:
         # Fetch top viewed movies (using 'Most Searched' proxy)
         movies = Movie.objects.order_by('-view_count').limit(10)
-        # for m in movies:
-        #     ensure_poster(m)
+        for m in movies:
+            ensure_poster(m)
         return jsonify([m.to_dict() for m in movies])
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@recommendation_bp.route('/popular-watchlists', methods=['GET'])
+@cache.cached(timeout=600)
+def recommend_popular_watchlists():
+    try:
+        pipeline = [
+            {"$group": {"_id": "$movie_id", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}},
+            {"$limit": 15}
+        ]
+        agg_results = list(Watchlist.objects.aggregate(*pipeline))
+        
+        movies = []
+        for item in agg_results:
+            movie = Movie.objects(movie_id=item['_id']).first()
+            if not movie:
+                 movie = Movie.objects(tmdb_id=item['_id']).first()
+            if movie:
+                 ensure_poster(movie)
+                 movies.append(movie.to_dict())
+                
+        # If no popular watchlist, fallback to most viewed
+        if not movies:
+             movies_fb = Movie.objects.order_by('-view_count').limit(10)
+             for m in movies_fb:
+                 ensure_poster(m)
+             return jsonify([m.to_dict() for m in movies_fb])
+
+        return jsonify(movies)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -412,8 +505,8 @@ def get_movies_by_genre(tmdb_genre_id):
             return jsonify({'error': 'Genre not found'}), 404
         movies = Movie.objects(genres=genre).limit(20)
         
-        # for m in movies:
-        #     ensure_poster(m)
+        for m in movies:
+            ensure_poster(m)
             
         return jsonify([m.to_dict() for m in movies])
     except Exception as e:

@@ -30,16 +30,7 @@ const LazyRecSection = ({ title, fetchFn, user, watchlistIds, onToggleWatchlist,
             setLoading(true);
             try {
                 const res = await fetchFn();
-                let data = res.data || [];
-
-                // Filter by preferred genres if provided
-                const preferredGenres = user?.preferences?.preferred_genres || [];
-                if (preferredGenres.length > 0) {
-                    data = data.filter(m =>
-                        m.genres_list?.some(g => preferredGenres.includes(g)) ||
-                        m.genres?.some(g => preferredGenres.includes(g.name))
-                    );
-                }
+                let data = Array.isArray(res.data) ? res.data : (res.data?.movies || []);
 
                 if (limit) data = data.slice(0, limit);
                 setMovies(data);
@@ -119,6 +110,8 @@ const Recommendations = ({ user, watchlistIds, onToggleWatchlist }) => {
         );
     }
 
+    const preferredGenres = user?.preferences?.preferred_genres || [];
+
     return (
         <div className="recommendations-page">
             <header className="page-header">
@@ -135,8 +128,37 @@ const Recommendations = ({ user, watchlistIds, onToggleWatchlist }) => {
             />
 
             <LazyRecSection
-                title="Trending Now"
+                title="Similar Viewers Liked"
+                fetchFn={() => recommendationAPI.getCollaborative(user.id)}
+                user={user}
+                watchlistIds={watchlistIds}
+                onToggleWatchlist={onToggleWatchlist}
+            />
+
+            {preferredGenres.map(genre => (
+                <LazyRecSection
+                    key={genre}
+                    title={`Because you like ${genre}`}
+                    fetchFn={() => recommendationAPI.getAll(1, 20, genre, '', '', true)}
+                    user={user}
+                    watchlistIds={watchlistIds}
+                    onToggleWatchlist={onToggleWatchlist}
+                    limit={20}
+                />
+            ))}
+
+            <LazyRecSection
+                title="Trending"
                 fetchFn={() => recommendationAPI.getTrending()}
+                user={user}
+                watchlistIds={watchlistIds}
+                onToggleWatchlist={onToggleWatchlist}
+                limit={15}
+            />
+
+            <LazyRecSection
+                title="Popular in Watchlists"
+                fetchFn={() => recommendationAPI.getPopularWatchlists()}
                 user={user}
                 watchlistIds={watchlistIds}
                 onToggleWatchlist={onToggleWatchlist}
@@ -151,13 +173,7 @@ const Recommendations = ({ user, watchlistIds, onToggleWatchlist }) => {
                 onToggleWatchlist={onToggleWatchlist}
             />
 
-            <LazyRecSection
-                title="Most Searched"
-                fetchFn={() => recommendationAPI.getMostViewed()}
-                user={user}
-                watchlistIds={watchlistIds}
-                onToggleWatchlist={onToggleWatchlist}
-            />
+
 
             <footer className="recs-footer">
                 <p>Personalized collection for {user?.username}</p>

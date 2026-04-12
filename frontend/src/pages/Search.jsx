@@ -18,7 +18,12 @@ const Search = ({ watchlistIds, onToggleWatchlist }) => {
             try {
                 // Fetch up to 50 results
                 const res = await recommendationAPI.getAll(1, 100, genre, query, country);
-                setMovies(res.data.movies || []);
+                const fetchedMovies = res.data.movies || [];
+                if (query) {
+                    setMovies(fetchedMovies.filter(m => m.title.toLowerCase() === query.toLowerCase()));
+                } else {
+                    setMovies(fetchedMovies);
+                }
             } catch (err) {
                 console.error("Search error", err);
             } finally {
@@ -76,9 +81,9 @@ const Search = ({ watchlistIds, onToggleWatchlist }) => {
                                     ? `This ${country} movie is not available.`
                                     : genre
                                         ? `No movies found in "${genre}" genre.`
-                                        : query
-                                            ? `No movies found matching "${query}".`
-                                            : "No movies found."}
+                                : query
+                                    ? `Movie not found`
+                                    : "No movies found."}
                             </p>
                         </div>
                     )}

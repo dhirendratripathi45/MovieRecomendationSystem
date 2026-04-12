@@ -31,7 +31,7 @@ class Config:
     RATELIMIT_DEFAULT = "200 per hour"
     
     # Cache
-    CACHE_TYPE = 'simple'
+    CACHE_TYPE = 'null' # Disable caching effectively
     CACHE_DEFAULT_TIMEOUT = 300
     
     # API Configuration

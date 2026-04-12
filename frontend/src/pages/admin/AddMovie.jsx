@@ -15,6 +15,7 @@ const AddMovie = () => {
     const [previewUrl, setPreviewUrl] = useState('');
     const [allGenres, setAllGenres] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [newGenreName, setNewGenreName] = useState('');
 
     useEffect(() => {
         const fetchGenres = async () => {
@@ -78,6 +79,21 @@ const AddMovie = () => {
                 ? prev.genres.filter(g => g !== genreName)
                 : [...prev.genres, genreName]
         }));
+    };
+
+    const handleAddNewGenre = () => {
+        const trimmed = newGenreName.trim();
+        if (trimmed) {
+            const exists = allGenres.find(g => g.name.toLowerCase() === trimmed.toLowerCase());
+            if (!exists) {
+                const newObj = { id: `temp-${Date.now()}`, name: trimmed };
+                setAllGenres([...allGenres, newObj]);
+            }
+            if (!formData.genres.includes(trimmed)) {
+                setFormData(prev => ({ ...prev, genres: [...prev.genres, trimmed] }));
+            }
+            setNewGenreName('');
+        }
     };
 
     return (
@@ -171,6 +187,22 @@ const AddMovie = () => {
                                     {genre.name}
                                 </button>
                             ))}
+                        </div>
+                        <div className="add-genre-wrapper" style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                            <input
+                                type="text"
+                                placeholder="Or enter a new genre"
+                                value={newGenreName}
+                                onChange={e => setNewGenreName(e.target.value)}
+                                style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid #333', background: '#222', color: '#fff' }}
+                            />
+                            <button
+                                type="button"
+                                onClick={handleAddNewGenre}
+                                style={{ padding: '0.5rem 1rem', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            >
+                                Add Genre
+                            </button>
                         </div>
                     </div>
 

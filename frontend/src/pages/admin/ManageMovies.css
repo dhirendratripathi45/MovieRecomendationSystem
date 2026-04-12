@@ -23,30 +23,30 @@
     margin-bottom: 2rem;
     flex-wrap: wrap;
     align-items: center;
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 1.5rem;
     border-radius: 20px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border-glass);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .search-input {
     flex: 1;
     min-width: 300px;
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 1rem 1.5rem;
     border-radius: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    color: #1a1a1a;
+    border: 1px solid var(--border-glass);
+    color: var(--text-primary);
     font-size: 1rem;
     transition: all 0.3s ease;
 }
 
 .search-input:focus {
     outline: none;
-    border-color: #ff2d7f;
-    box-shadow: 0 0 15px rgba(255, 45, 127, 0.15);
-    background: #ffffff;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(229, 9, 20, 0.25);
+    background: var(--bg-card);
 }
 
 .filters {
@@ -56,11 +56,11 @@
 }
 
 .sort-select {
-    background: #ffffff;
-    color: #1a1a1a;
+    background: var(--bg-card);
+    color: var(--text-primary);
     padding: 1rem 1.5rem;
     border-radius: 12px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-glass);
     cursor: pointer;
     font-size: 0.95rem;
     transition: all 0.3s ease;
@@ -68,7 +68,7 @@
 
 .sort-select:hover,
 .sort-select:focus {
-    border-color: #ff2d7f;
+    border-color: var(--primary-color);
 }
 
 .filter-checkbox {
@@ -115,11 +115,11 @@
 }
 
 .table-container {
-    background: #ffffff;
+    background: var(--bg-card);
     border-radius: 30px;
     overflow: hidden;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-glass);
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.5);
 }
 
 .admin-table {
@@ -129,25 +129,25 @@
 }
 
 .admin-table th {
-    background: rgba(0, 0, 0, 0.02);
+    background: rgba(255, 255, 255, 0.02);
     padding: 1.8rem 2rem;
     font-weight: 700;
-    color: #888 !important;
+    color: var(--text-muted) !important;
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 2.5px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--border-glass);
 }
 
 .admin-table td {
     padding: 1.5rem 2rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    border-bottom: 1px solid var(--border-glass);
     vertical-align: middle;
-    color: #4a4a4a !important;
+    color: var(--text-secondary) !important;
 }
 
 .admin-table tr:hover td {
-    background: rgba(0, 0, 0, 0.01);
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .table-thumb {
@@ -161,7 +161,7 @@
 .movie-title-cell strong {
     display: block;
     font-size: 1.15rem;
-    color: #1a1a1a !important;
+    color: var(--text-primary) !important;
     font-weight: 700;
 }
 

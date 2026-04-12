@@ -1,3 +1,4 @@
+
 import os
 import pandas as pd
 import pickle
@@ -13,13 +14,21 @@ def train_models():
     dataset_dir = os.path.join(base_dir, 'dataset')
     models_dir = os.path.join(base_dir, 'models')
     
-    train_path = os.path.join(dataset_dir, 'train.csv')
+    if not os.path.exists(models_dir):
+        os.makedirs(models_dir)
+    
+    train_path = os.path.join(dataset_dir, 'ratings.csv') # Using full ratings for now, or split if exists
+    # Ideally should use train.csv from data_split.py if available, but let's default to ratings.csv
+    # if train.csv exists, use it.
+    if os.path.exists(os.path.join(dataset_dir, 'train.csv')):
+        train_path = os.path.join(dataset_dir, 'train.csv')
+        
     movies_path = os.path.join(dataset_dir, 'movies.csv')
     tags_path = os.path.join(dataset_dir, 'tags.csv')
     
     # Check if files exist
     if not os.path.exists(train_path):
-        print(f"Error: {train_path} not found. Please run data_split.py first.")
+        print(f"Error: {train_path} not found.")
         return
     if not os.path.exists(movies_path):
         print(f"Error: {movies_path} not found.")
@@ -27,6 +36,7 @@ def train_models():
 
     # Load data
     print("Loading data...")
+    # Read ratings (columns: userId, movieId, rating, timestamp)
     train_data = pd.read_csv(train_path)
     movies_data = pd.read_csv(movies_path)
     
@@ -36,7 +46,8 @@ def train_models():
         print("Loading tags...")
         tags_data = pd.read_csv(tags_path)
         # Aggregate tags by movieId
-        tags_data['tag'] = tags_data['tag'].astype(str)
+        # Ensure it's string first
+        tags_data['tag'] = tags_data['tag'].fillna('').astype(str)
         tags_grouped = tags_data.groupby('movieId')['tag'].apply(lambda x: ' '.join(x)).reset_index()
         # Merge with movies
         movies_data = pd.merge(movies_data, tags_grouped, on='movieId', how='left')
@@ -89,7 +100,6 @@ def train_models():
 
     print("Collaborative Filtering model trained and saved.")
 
-
     # --- Content-Based Filtering ---
     print("Training Content-Based Filtering model...")
     
@@ -105,9 +115,6 @@ def train_models():
     tfidf = TfidfVectorizer(stop_words='english')
     tfidf_matrix = tfidf.fit_transform(movies_data['content_features'])
     
-    # Instead of computing the full N*N cosine similarity matrix (which causes MemoryError),
-    # we will save the sparse TF-IDF matrix and compute similarity on-the-fly.
-    
     # Save TF-IDF matrix
     with open(os.path.join(models_dir, 'tfidf_matrix.pkl'), 'wb') as f:
         pickle.dump(tfidf_matrix, f)
@@ -119,9 +126,6 @@ def train_models():
         pickle.dump(indices, f)
         
     print("Content-Based Filtering model (TF-IDF Matrix) trained and saved.")
-    print("Note: Similarity will be computed on-the-fly to save memory.")
-
-
 
 if __name__ == "__main__":
     train_models()

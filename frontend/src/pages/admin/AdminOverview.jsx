@@ -58,13 +58,7 @@ const AdminOverview = () => {
                         <p>{stats.movies}</p>
                     </div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-icon">⭐</div>
-                    <div className="stat-info">
-                        <h3>Total Ratings</h3>
-                        <p>{stats.reviews || 0}</p>
-                    </div>
-                </div>
+
                 <div className="stat-card">
                     <div className="stat-icon">📑</div>
                     <div className="stat-info">
@@ -72,13 +66,7 @@ const AdminOverview = () => {
                         <p>{stats.watchlist_count || 0}</p>
                     </div>
                 </div>
-                <div className="stat-card">
-                    <div className="stat-icon">👁️</div>
-                    <div className="stat-info">
-                        <h3>Total Views</h3>
-                        <p>{stats.views}</p>
-                    </div>
-                </div>
+
             </div>
 
             <div className="stats-grid extra-stats">

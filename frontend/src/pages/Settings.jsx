@@ -8,10 +8,6 @@ const Settings = ({ user }) => {
     const [profilePicture, setProfilePicture] = useState(user?.profile_picture || '');
     const [message, setMessage] = useState('');
 
-    // Admin weight state
-    const [weight, setWeight] = useState(70);
-    const [isSaving, setIsSaving] = useState(false);
-
     // Password change state
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -38,14 +34,6 @@ const Settings = ({ user }) => {
         } catch (err) {
             setMessage('Error changing password: ' + (err.response?.data?.message || err.message));
         }
-    };
-
-    const handleAdminSave = async () => {
-        setIsSaving(true);
-        await new Promise(resolve => setTimeout(resolve, 800));
-        setIsSaving(false);
-        setMessage('Admin settings saved!');
-        setTimeout(() => setMessage(''), 3000);
     };
 
     return (
@@ -127,41 +115,7 @@ const Settings = ({ user }) => {
                     </form>
                 </section>
 
-                {user?.role === 'admin' && (
-                    <>
-                        <section className="settings-section">
-                            <h2>Algorithm Configuration</h2>
-                            <div className="settings-group">
-                                <label>Hybrid Weight (Collaborative: {weight}%)</label>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    value={weight}
-                                    onChange={(e) => setWeight(e.target.value)}
-                                    style={{ width: '100%' }}
-                                />
-                                <div className="range-labels" style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px' }}>
-                                    <span>0%</span>
-                                    <span>{weight}%</span>
-                                    <span>100%</span>
-                                </div>
-                            </div>
-                            <button className="btn-primary" onClick={handleAdminSave} disabled={isSaving}>
-                                {isSaving ? 'Saving...' : 'Save Algorithm'}
-                            </button>
-                        </section>
 
-                        <section className="settings-section">
-                            <h2>Maintenance</h2>
-                            <div className="maintenance-actions" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
-                                <button className="btn-secondary">Clear Cache</button>
-                                <button className="btn-secondary">Re-Sync Metadata</button>
-                                <button className="btn-danger">Reset Analytics</button>
-                            </div>
-                        </section>
-                    </>
-                )}
             </div>
 
             {message && <div style={{ position: 'fixed', bottom: '20px', right: '20px', backgroundColor: '#e50914', color: 'white', padding: '1rem', borderRadius: '8px', zIndex: 1000, boxShadow: '0 4px 15px rgba(0,0,0,0.5)' }}>{message}</div>}

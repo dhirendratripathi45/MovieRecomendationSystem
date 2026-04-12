@@ -118,8 +118,8 @@ const Register = ({ onLogin }) => {  // Add onLogin prop
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
+    <div className="login-container" style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <div className="login-card" style={{ width: '100%', maxWidth: '500px', flex: 'none' }}>
         <div className="login-header">
           <div className="logo">
             <span className="logo-icon">🌐</span>
@@ -212,14 +212,7 @@ const Register = ({ onLogin }) => {  // Add onLogin prop
             {errors.genres && <span className="error-text">{errors.genres}</span>}
           </div>
 
-          <div className="form-options">
-            <div className="remember-me">
-              <input type="checkbox" id="terms" required />
-              <label htmlFor="terms">
-                I agree to the <Link to="/terms">Terms & Conditions</Link>
-              </label>
-            </div>
-          </div>
+
 
           <button
             type="submit"
@@ -238,40 +231,10 @@ const Register = ({ onLogin }) => {  // Add onLogin prop
         </form>
 
         <div className="signup-link">
-          Already have an account? <Link to="/login">Sign in</Link>
+          Already have an account? <Link to="/login">Login here</Link>
         </div>
       </div >
-
-      <div className="login-sidebar">
-        <div className="sidebar-content">
-          <h2>Join Our Movie Community</h2>
-          <p>Get personalized movie recommendations and connect with fellow film enthusiasts</p>
-          <div className="features">
-            <div className="feature">
-              <span className="feature-icon">🎯</span>
-              <div>
-                <h3>Smart Recommendations</h3>
-                <p>Movies tailored just for you</p>
-              </div>
-            </div>
-            <div className="feature">
-              <span className="feature-icon">📊</span>
-              <div>
-                <h3>Track Your Journey</h3>
-                <p>Rate and review movies you've watched</p>
-              </div>
-            </div>
-            <div className="feature">
-              <span className="feature-icon">👥</span>
-              <div>
-                <h3>Connect with Others</h3>
-                <p>Share reviews and discover new favorites</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div >
+    </div>
   );
 };
 

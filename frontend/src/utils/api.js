@@ -9,7 +9,7 @@ const API = axios.create({
 // Request interceptor
 API.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,8 +23,8 @@ API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('token');
       window.location.href = '/login';
     }
     return Promise.reject(error);
@@ -69,8 +69,9 @@ export const recommendationAPI = {
   getArrivingSoon: () => API.get('/recommend/arriving-soon'),
   getMostRated: () => API.get('/recommend/most-rated'),
   getMostViewed: () => API.get('/recommend/most-viewed'),
-  getAll: (page = 1, limit = 20, genre = '', search = '', country = '') =>
-    API.get(`/recommend/all?page=${page}&limit=${limit}&genre=${genre ? encodeURIComponent(genre) : ''}&search=${search ? encodeURIComponent(search) : ''}&country=${country ? encodeURIComponent(country) : ''}`),
+  getPopularWatchlists: () => API.get('/recommend/popular-watchlists'),
+  getAll: (page = 1, limit = 20, genre = '', search = '', country = '', randomize = false) =>
+    API.get(`/recommend/all?page=${page}&limit=${limit}&genre=${genre ? encodeURIComponent(genre) : ''}&search=${search ? encodeURIComponent(search) : ''}&country=${country ? encodeURIComponent(country) : ''}&randomize=${randomize}`),
   getGenres: () => API.get('/recommend/genres'),
   getMoviesByGenre: (genreId) => API.get(`/recommend/genres/${genreId}`),
   getMovie: (id) => API.get(`/recommend/movie/${id}`),

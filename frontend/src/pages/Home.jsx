@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './Home.css';
 import { recommendationAPI } from '../utils/api';
 import MovieCard from '../components/MovieCard';
@@ -32,7 +32,7 @@ const LazyGenreRow = ({ genre, watchlistIds, onToggleWatchlist }) => {
     const fetchMovies = async () => {
       setLoading(true);
       try {
-        const res = await recommendationAPI.getAll(1, 12, genre, '');
+        const res = await recommendationAPI.getAll(1, 12, genre, '', '', true);
         setMovies(res.data.movies || []);
       } catch (e) {
         console.error(`Error fetching ${genre}:`, e);
@@ -104,25 +104,11 @@ const Home = ({ user, watchlistIds, onToggleWatchlist }) => {
         ]);
 
         if (trendingRes.data) {
-          let trending = trendingRes.data;
-          if (preferredGenres.length > 0) {
-            trending = trending.filter(m =>
-              m.genres_list?.some(g => preferredGenres.includes(g)) ||
-              m.genres?.some(g => preferredGenres.includes(g.name))
-            );
-          }
-          setTrendingMovies(trending.slice(0, 10));
+          setTrendingMovies(trendingRes.data.slice(0, 10));
         }
 
         if (arrivingRes.data) {
-          let arriving = arrivingRes.data;
-          if (preferredGenres.length > 0) {
-            arriving = arriving.filter(m =>
-              m.genres_list?.some(g => preferredGenres.includes(g)) ||
-              m.genres?.some(g => preferredGenres.includes(g.name))
-            );
-          }
-          setArrivingSoonMovies(arriving.slice(0, 10));
+          setArrivingSoonMovies(arrivingRes.data.slice(0, 10));
         }
 
       } catch (e) {
@@ -134,8 +120,51 @@ const Home = ({ user, watchlistIds, onToggleWatchlist }) => {
     init();
   }, [user]);
 
+  const [heroPosterMap, setHeroPosterMap] = React.useState({});
+
+  // Pre-fetch hero posters for movies missing poster_path using OMDB
+  useEffect(() => {
+    const allHero = [...trendingMovies, ...arrivingSoonMovies];
+    if (allHero.length === 0) return;
+
+    const fetchMissing = async () => {
+      const updates = {};
+      for (const movie of allHero) {
+        const key = movie.tmdbId || movie.movieId || movie.id;
+        if (movie.poster_path && movie.poster_path !== 'None' && movie.poster_path !== 'null') {
+          // Already have poster from backend
+          if (movie.poster_path.startsWith('http')) {
+            updates[key] = movie.poster_path;
+          } else if (movie.poster_path.startsWith('/static')) {
+            updates[key] = `http://localhost:5000${movie.poster_path}`;
+          } else {
+            updates[key] = `https://image.tmdb.org/t/p/original${movie.poster_path}`;
+          }
+        } else {
+          // Fetch from OMDB by title
+          try {
+            const omdbUrl = `https://www.omdbapi.com/?apikey=3fe0a4a2&t=${encodeURIComponent(movie.title)}`;
+            const r = await fetch(omdbUrl);
+            const data = await r.json();
+            if (data && data.Poster && data.Poster !== 'N/A') {
+              // Use higher resolution version
+              updates[key] = data.Poster.replace('SX300', 'SX600');
+            }
+          } catch (e) { /* ignore */ }
+        }
+        if (!updates[key]) {
+          updates[key] = `https://placehold.co/1920x1080/1a1a2e/ffffff?text=${encodeURIComponent(movie.title || 'Movie')}`;
+        }
+      }
+      setHeroPosterMap(updates);
+    };
+    fetchMissing();
+  }, [trendingMovies, arrivingSoonMovies]);
+
   const getPosterUrl = (movie) => {
-    if (!movie.poster_path) return `https://placehold.co/1920x1080?text=${movie.title}`;
+    const key = movie.tmdbId || movie.movieId || movie.id;
+    if (heroPosterMap[key]) return heroPosterMap[key];
+    if (!movie.poster_path || movie.poster_path === 'None') return `https://placehold.co/1920x1080/1a1a2e/ffffff?text=${encodeURIComponent(movie.title || 'Movie')}`;
     if (movie.poster_path.startsWith('http')) return movie.poster_path;
     if (movie.poster_path.startsWith('/static')) return `http://localhost:5000${movie.poster_path}`;
     return `https://image.tmdb.org/t/p/original${movie.poster_path}`;
@@ -219,7 +248,7 @@ const Home = ({ user, watchlistIds, onToggleWatchlist }) => {
       <section className="genre-sections">
         <div className="genre-row">
           <div className="genre-row-header">
-            <h2 className="genre-row-title">Trending This week</h2>
+            <h2 className="genre-row-title">Trending Movie</h2>
             <button className="btn-view-more" onClick={() => navigate('/trending')}>
               View All →
             </button>

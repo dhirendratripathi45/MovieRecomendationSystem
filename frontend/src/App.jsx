@@ -37,8 +37,14 @@ function App() {
   const [watchlistIds, setWatchlistIds] = useState([]);
 
   useEffect(() => {
+    // Clear old persistent localStorage to prevent auto-login
+    if (localStorage.getItem('user')) {
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+    }
+
     // Check if user is logged in
-    const storedUser = localStorage.getItem('user');
+    const storedUser = sessionStorage.getItem('user');
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
@@ -77,15 +83,15 @@ function App() {
 
   const handleLogin = (userData, token) => {
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', token);
+    sessionStorage.setItem('user', JSON.stringify(userData));
+    sessionStorage.setItem('token', token);
     fetchWatchlist();
   };
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('token');
   };
 
   const handleSearch = (query) => {
@@ -121,7 +127,7 @@ function App() {
             <Route
               path="/"
               element={
-                user ? (user.role === 'admin' ? <Navigate to="/admin" /> : <Home user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} />) : <Navigate to="/login" />
+                user ? (user.role === 'admin' ? <Navigate to="/admin" /> : <Home user={user} watchlistIds={watchlistIds} onToggleWatchlist={handleToggleWatchlist} />) : <Navigate to="/register" />
               }
             />
             <Route

@@ -1,13 +1,13 @@
 /* Login.css */
 :root {
-  --primary-color: #ff2d7f;
-  --primary-dark: #d4005a;
-  --secondary-color: #ffffff;
-  --text-color: #1a1a1a;
-  --text-secondary: #4a4a4a;
-  --bg-dark: #f8f9fa;
-  --bg-card: rgba(255, 255, 255, 0.95);
-  --border-color: #e0e0e0;
+  --primary-color: #e50914;
+  --primary-dark: #b80710;
+  --secondary-color: #141416;
+  --text-color: #ffffff;
+  --text-secondary: #b3b3b3;
+  --bg-dark: #0a0a0c;
+  --bg-card: rgba(20, 20, 22, 0.95);
+  --border-color: rgba(255, 255, 255, 0.08);
   --success-color: #2ecc71;
   --error-color: #e74c3c;
   --transition: all 0.3s ease;
@@ -304,6 +304,7 @@ body {
 
 .sidebar-content h2 {
   font-size: 2.5rem;
+  line-height: 1.2;
   margin-bottom: 1rem;
   background: linear-gradient(45deg, var(--primary-color), #ff5b9d);
   -webkit-background-clip: text;

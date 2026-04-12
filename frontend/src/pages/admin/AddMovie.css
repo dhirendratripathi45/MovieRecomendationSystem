@@ -3,11 +3,11 @@
 }
 
 .form-container {
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 4rem;
     border-radius: 35px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-glass);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
 }
 
 .admin-form {
@@ -24,7 +24,7 @@
 
 .form-group label {
     font-weight: 700;
-    color: #ff2d7f !important;
+    color: var(--primary-color) !important;
     font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 1.5px;
@@ -32,20 +32,20 @@
 
 .form-group input,
 .form-group textarea {
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 1.25rem 1.8rem;
     border-radius: 18px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-glass);
     font-size: 1.05rem;
-    color: #1a1a1a !important;
+    color: var(--text-primary) !important;
     transition: all 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
-    border-color: #ff2d7f;
-    box-shadow: 0 0 20px rgba(255, 45, 127, 0.1);
-    background: #ffffff;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 20px rgba(229, 9, 20, 0.2);
+    background: var(--bg-card);
     outline: none;
 }
 
@@ -130,28 +130,28 @@
 .genre-chip {
     padding: 0.9rem 1.6rem;
     border-radius: 15px;
-    background: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    color: #4a4a4a !important;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary) !important;
     font-weight: 600;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .genre-chip:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: #fff !important;
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary) !important;
     transform: scale(1.05);
 }
 
 .genre-chip.selected {
-    background: #ff2d7f;
+    background: var(--primary-color);
     color: #fff !important;
-    border-color: #ff2d7f;
-    box-shadow: 0 0 15px rgba(255, 45, 127, 0.3);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 15px rgba(229, 9, 20, 0.3);
 }
 
 .submit-btn {
-    background: linear-gradient(90deg, #ff2d7f 0%, #ff5b9d 100%);
+    background: linear-gradient(90deg, #e50914 0%, #ff0f1a 100%);
     color: white !important;
     padding: 1.6rem;
     border-radius: 20px;
@@ -162,7 +162,7 @@
     letter-spacing: 2px;
     cursor: pointer;
     transition: all 0.4s ease;
-    box-shadow: 0 15px 30px rgba(255, 45, 127, 0.2);
+    box-shadow: 0 15px 30px rgba(229, 9, 20, 0.3);
 }
 
 .submit-btn:hover {

@@ -39,23 +39,23 @@
 }
 
 .stat-card {
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 2.5rem;
     border-radius: 24px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-glass);
     display: flex;
     align-items: center;
     gap: 2rem;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .stat-card:hover {
     transform: translateY(-10px);
-    border-color: rgba(255, 45, 127, 0.3);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    border-color: rgba(229, 9, 20, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
 }
 
 .stat-card::after {
@@ -65,7 +65,7 @@
     right: 0;
     width: 100px;
     height: 100px;
-    background: radial-gradient(circle, rgba(255, 45, 127, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(229, 9, 20, 0.1) 0%, transparent 70%);
     opacity: 0;
     transition: 0.4s;
 }
@@ -104,11 +104,11 @@
 }
 
 .activity-section {
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 3rem;
     border-radius: 30px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border-glass);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .activity-section h2 {
@@ -127,7 +127,7 @@
     display: flex;
     gap: 1.5rem;
     padding-bottom: 2rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--border-glass);
     align-items: center;
 }
 
@@ -167,11 +167,11 @@
 }
 
 .admin-list-card {
-    background: #ffffff;
+    background: var(--bg-card);
     padding: 2rem;
     border-radius: 20px;
-    border: 1px solid rgba(0, 0, 0, 0.05);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border-glass);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .admin-list-card h3 {

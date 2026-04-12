@@ -154,6 +154,7 @@ const ManageMovies = () => {
                                                         `https://image.tmdb.org/t/p/w92${movie.poster_path}`
                                             ) : `https://placehold.co/40x60?text=🎥`}
                                             alt={movie.title}
+                                            style={{ width: '50px', height: '75px', objectFit: 'cover', borderRadius: '4px' }}
                                         />
                                     </td>
                                     <td className="movie-title-cell">

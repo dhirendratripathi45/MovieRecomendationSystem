@@ -4,6 +4,8 @@ import sys
 import pandas as pd
 from mongoengine import connect, disconnect
 from datetime import datetime
+import re
+from tqdm import tqdm
 
 # Add backend directory to path to import models and config
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -29,14 +31,36 @@ def ingest_data():
     
     movies_path = os.path.join(dataset_path, 'movies.csv')
     links_path = os.path.join(dataset_path, 'links.csv')
+    ratings_path = os.path.join(dataset_path, 'ratings.csv')
 
     print(f"Reading CSV files from {dataset_path}...")
     movies_df = pd.read_csv(movies_path)
     links_df = pd.read_csv(links_path)
+    ratings_df = pd.read_csv(ratings_path) # Read ratings
+
+    # Pre-process ratings to get vote_count and vote_average per movie
+    print("Processing ratings...")
+    movie_ratings_stats = ratings_df.groupby('movieId')['rating'].agg(['count', 'sum']).reset_index()
+    movie_ratings_stats['average'] = movie_ratings_stats['sum'] / movie_ratings_stats['count']
+    movie_ratings = movie_ratings_stats.set_index('movieId').to_dict(orient='index')
 
     # Merge movies and links
     print("Merging dataframes...")
     df = pd.merge(movies_df, links_df, on='movieId', how='left')
+
+    # Filter invalid TMDB IDs
+    df = df.dropna(subset=['tmdbId'])
+    df['tmdbId'] = df['tmdbId'].astype(int)
+    
+    # Deduplicate by tmdbId (keep first occurrence)
+    initial_count = len(df)
+    df = df.drop_duplicates(subset=['tmdbId'])
+    print(f"Removed {initial_count - len(df)} duplicate TMDB IDs.")
+
+    # Clear existing
+    print("Clearing existing Movies and Genres...")
+    Movie.objects.delete()
+    Genre.objects.delete()
 
     # Get all unique genres first
     print("Processing genres...")
@@ -46,87 +70,86 @@ def ingest_data():
         all_genres.update(genre_list)
 
     genre_map = {}
+    genre_id_counter = 100
     for genre_name in all_genres:
         if not genre_name: continue
-        
-        # Simple ID generation since we don't have TMDB genre IDs in csv
-        # In a real app we'd fetch these from TMDB API
-        # Here we hash the name or just use a counter? 
-        # Let's just create if not exists using name as unique key
-        
-        # Check if exists
-        genre = Genre.objects(name=genre_name).first()
-        if not genre:
-            # Generate a pseudo tmdb_id if needed, or just a random int
-            # models.py requires tmdb_id. Let's make one up based on hash or just random
-            import random
-            fake_id = random.randint(1000, 999999)
-            while Genre.objects(tmdb_id=fake_id).count() > 0:
-                 fake_id = random.randint(1000, 999999)
-                 
-            genre = Genre(
-                name=genre_name,
-                tmdb_id=fake_id 
-            )
-            genre.save()
+        genre = Genre(
+            name=genre_name,
+            tmdb_id=genre_id_counter 
+        )
+        genre.save()
         genre_map[genre_name] = genre
+        genre_id_counter += 1
 
-    print(f"Found {len(genre_map)} genres.")
+    print(f"Created {len(genre_map)} genres.")
 
-    # Process Movies
+    # Pre-calculate trending/arriving soon IDs
+    # Trending: Top 50 by vote_count
+    # Arriving Soon: Top 50 by release_year (descending)
+    
+    # Extract year to sort
+    def extract_year(title):
+        match = re.search(r'\((\d{4})\)', str(title))
+        return int(match.group(1)) if match else 0
+    
+    df['year'] = df['title'].apply(extract_year)
+    
+    # Map ratings to df
+    print(f"Mapping ratings to {len(df)} movies...")
+    def get_vote_count(mid):
+        return movie_ratings.get(mid, {'count': 0})['count']
+    
+    def get_vote_average(mid):
+        stats = movie_ratings.get(mid, {'count': 0, 'sum': 0.0, 'average': 0.0})
+        return stats['average']
+
+    df['vote_count_temp'] = df['movieId'].apply(get_vote_count)
+    df['vote_average_temp'] = df['movieId'].apply(get_vote_average)
+    
+            # Process Movies
     print("Processing movies...")
     count = 0
     total = len(df)
     
-    for _, row in df.iterrows():
+    for _, row in tqdm(df.iterrows(), total=total, desc="Saving Movies"):
         try:
             movie_id = row['movieId']
             tmdb_id = row['tmdbId']
             
-            if pd.isna(tmdb_id):
-                continue
-                
-            tmdb_id = int(tmdb_id)
-            
-            # Check if movie exists
-            movie = Movie.objects(tmdb_id=tmdb_id).first()
-            if not movie:
-                movie = Movie(tmdb_id=tmdb_id)
-            
+            movie = Movie(tmdb_id=tmdb_id)
             movie.movie_id = int(movie_id)
-            movie.title = row['title']
+            movie.title = row['title'].strip()
             
-            # Extract year from title if possible "Toy Story (1995)"
-            import re
-            match = re.search(r'\((\d{4})\)', row['title'])
-            if match:
-                movie.release_year = int(match.group(1))
-                # clean title
-                movie.title = row['title'].replace(f" ({match.group(1)})", "").strip()
+            # Year extraction
+            movie.release_year = row['year']
+            if movie.release_year > 0:
+                movie.title = row['title'].replace(f" ({movie.release_year})", "").strip()
             
             if not pd.isna(row['imdbId']):
-                movie.imdb_id = str(int(row['imdbId'])).zfill(7) # IMDB IDs are usually 7 digits padded
+                movie.imdb_id = str(int(row['imdbId'])).zfill(7)
             
             # Genres
             genre_list = clean_genres(row['genres'])
             movie.genres = [genre_map[g] for g in genre_list if g in genre_map]
+            movie.genres_list = genre_list
             
-            # Create a simple poster path placeholder or fetch it?
-            # For now, we don't have it in CSV. We will handle dynamic fetching in frontend or update later.
-            # But the model has 'poster_path'. Leave it empty for now.
-            
-            movie.popularity = 0.0 # Default
-            movie.vote_average = 0.0
-            movie.vote_count = 0
-            
+            # Ratings from mapped columns
+            movie.vote_count = int(row['vote_count_temp'])
+            movie.vote_average = float(row['vote_average_temp'])
+            movie.popularity = float(movie.vote_count)
+
+            # Manual override: Flags are now False by default and set via admin panel
+            movie.is_trending = False
+            movie.is_arriving_soon = False
+                
             movie.save()
             count += 1
-            if count % 100 == 0:
-                print(f"Processed {count}/{total} movies")
                 
         except Exception as e:
-            print(f"Error processing row {row.get('movieId', '?')}: {e}")
+            # print(f"Error processing row {row.get('movieId', '?')}: {e}")
             continue
+
+    print(f"Ingested {count} movies.")
 
     print("Ingestion complete!")
     disconnect()
